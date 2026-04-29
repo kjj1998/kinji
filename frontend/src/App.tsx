@@ -9,6 +9,7 @@ import {
 	Title,
 } from "@mantine/core";
 import { Navbar } from "./components/Navbar";
+import { SummaryCard } from "./components/SummaryCard";
 
 function App() {
 	return (
@@ -36,15 +37,7 @@ function App() {
 					</Text>
 				</Group>
 				<SimpleGrid cols={4} mt="md">
-					<Card withBorder radius="md" p="md">
-						<Text size="sm" c="dimmed">
-							Total Spent This Month
-						</Text>
-						<Group justify="space-between" mt="xs">
-							<Title order={2}>$1,240</Title>
-							<Badge color="red">↑ 8%</Badge>
-						</Group>
-					</Card>
+					<SummaryCard label="Total Spent" value={345.67} delta={-4} />
 					<Card withBorder radius="md" p="md">
 						<Text size="sm" c="dimmed">
 							Total Spent This Month
