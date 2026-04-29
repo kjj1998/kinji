@@ -1,37 +1,134 @@
 .navbar {
-  width: 90px;
-  height: 100vh;
-  padding: var(--mantine-spacing-md);
+  background-color: #ffffff;
+  border-right: 1px solid #e8e6e1;
   display: flex;
   flex-direction: column;
-  background-color: #FDF6E3;
-  border-right: 1px solid #D4A853;
 }
 
-.navbarMain {
-  flex: 1;
-  margin-top: 50px;
+/* Brand */
+.brand {
+  flex-shrink: 0;
 }
 
-.link {
-  width: 100%;
-  height: 50px;
-  border-radius: var(--mantine-radius-md);
+.brandMark {
+  width: 24px;
+  height: 24px;
+  background-color: #1c1c1c;
+  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #633806;
+  color: #fafaf9;
+  font-size: 13px;
+  font-weight: 700;
+}
 
-  &:hover {
-    background-color: #F5E4B8;
-  }
+/* Primary upload button — dark, distinct from any nav item */
+.uploadButton {
+  background-color: #1c1c1c;
+  color: #fafaf9;
+  font-weight: 500;
+  font-size: 13px;
+  height: auto;
+  padding: 12px 14px;
+  border-radius: 8px;
+  transition: background-color 0.15s ease;
+}
 
-  &[data-active] {
+.uploadButton:hover {
+  background-color: #000000;
+}
 
-    &,
-    &:hover {
-      background-color: #F5C475;
-      color: #3D2000;
-    }
-  }
+/* Section header above nav items */
+.sectionLabel {
+  font-size: 11px;
+  color: #999;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 500;
+}
+
+/* Nav item */
+.navItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  color: #555;
+  font-size: 14px;
+  font-weight: 400;
+  width: 100%;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.navItem:hover {
+  background-color: #f5f3ee;
+  color: #1c1c1c;
+}
+
+.navItem:hover .navIcon {
+  color: #1c1c1c;
+}
+
+.navItem[data-active] {
+  background-color: #f0eee9;
+  color: #1c1c1c;
+  font-weight: 500;
+}
+
+.navItem[data-active] .navIcon {
+  color: #1c1c1c;
+}
+
+.navIcon {
+  color: #888;
+  flex-shrink: 0;
+  transition: color 0.15s ease;
+}
+
+.navLabel {
+  color: inherit;
+  font-weight: inherit;
+}
+
+.navBadge {
+  font-size: 11px;
+  font-weight: 500;
+  background-color: #f5e8e2;
+  color: #8a3a1f;
+  text-transform: none;
+  padding: 1px 7px;
+  height: auto;
+  line-height: 1.4;
+}
+
+/* Bottom status block */
+.statusBlock {
+  border-top: 1px solid #e8e6e1;
+  flex-shrink: 0;
+}
+
+.statusLabel {
+  font-size: 11px;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.statusProgress :global(.mantine-Progress-section) {
+  background-color: #1c1c1c;
+}
+
+/* User chip */
+.userChip {
+  padding: 10px 12px;
+  border-radius: 6px;
+  width: 100%;
+  transition: background-color 0.15s ease;
+  flex-shrink: 0;
+}
+
+.userChip:hover {
+  background-color: #f5f3ee;
 }
