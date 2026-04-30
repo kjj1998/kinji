@@ -1,13 +1,5 @@
 import "./App.css";
-import {
-	AppShell,
-	Badge,
-	Card,
-	Group,
-	SimpleGrid,
-	Text,
-	Title,
-} from "@mantine/core";
+import { AppShell, Group, SimpleGrid, Text } from "@mantine/core";
 import { Navbar } from "./components/Navbar";
 import { SummaryCard } from "./components/SummaryCard";
 
@@ -37,34 +29,21 @@ function App() {
 					</Text>
 				</Group>
 				<SimpleGrid cols={4} mt="md">
-					<SummaryCard label="Total Spent" value={345.67} delta={-4} />
-					<Card withBorder radius="md" p="md">
-						<Text size="sm" c="dimmed">
-							Total Spent This Month
-						</Text>
-						<Group justify="space-between" mt="xs">
-							<Title order={2}>$1,240</Title>
-							<Badge color="red">↑ 8%</Badge>
-						</Group>
-					</Card>
-					<Card withBorder radius="md" p="md">
-						<Text size="sm" c="dimmed">
-							Total Spent This Month
-						</Text>
-						<Group justify="space-between" mt="xs">
-							<Title order={2}>$1,240</Title>
-							<Badge color="red">↑ 8%</Badge>
-						</Group>
-					</Card>
-					<Card withBorder radius="md" p="md">
-						<Text size="sm" c="dimmed">
-							Total Spent This Month
-						</Text>
-						<Group justify="space-between" mt="xs">
-							<Title order={2}>$1,240</Title>
-							<Badge color="red">↑ 8%</Badge>
-						</Group>
-					</Card>
+					<SummaryCard label="Total Income" value={4900} />
+					<SummaryCard label="Total Spent" value={347} delta={2.5} />
+					<SummaryCard
+						label="Net Savings"
+						value={1345.2}
+						delta={8}
+						invertDelta
+					/>
+					<SummaryCard
+						label="Savings Rate"
+						value={26}
+						format={"percent"}
+						delta={5}
+						invertDelta
+					/>
 				</SimpleGrid>
 			</AppShell.Main>
 		</AppShell>
