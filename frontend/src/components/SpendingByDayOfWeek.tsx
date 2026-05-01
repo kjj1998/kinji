@@ -1,56 +1,55 @@
 import { Box, Card, Group, Text, Title } from "@mantine/core";
 
-export interface MonthlyDataPoint {
-	month: string;
+export interface DayOfWeekData {
+	day: string;
 	amount: number;
-	color?: string;
 }
 
-export interface MonthlyTrendProps {
-	data: MonthlyDataPoint[];
+export interface SpendingByDayOfWeekProps {
+	data: DayOfWeekData[];
 	currency?: string;
 	color?: string;
 }
 
-export function MonthlyTrend({
+export function SpendingByDayOfWeek({
 	data,
 	currency = "$",
 	color = "#D4A853",
-}: MonthlyTrendProps) {
+}: SpendingByDayOfWeekProps) {
 	const max = Math.max(...data.map((d) => d.amount)) || 1;
 
 	return (
 		<Card withBorder radius="md" p="sm">
 			<Title order={5} mb="xs">
-				Monthly Trend
+				Spending by Day of Week
 			</Title>
-			<Group align="flex-end" justify="space-between" h={160} gap="xs">
+			<Group align="flex-end" justify="space-between" h={120} gap="xs">
 				{data.map((point) => (
 					<Box
-						key={point.month}
+						key={point.day}
 						style={{
 							flex: 1,
 							display: "flex",
 							flexDirection: "column",
 							alignItems: "center",
-							gap: 6,
+							gap: 4,
 						}}
 					>
 						<Text size="xs" c="dimmed">
 							{currency}
-							{(point.amount / 1000).toFixed(1)}k
+							{point.amount}
 						</Text>
 						<Box
 							style={{
 								width: "100%",
-								height: `${(point.amount / max) * 100}px`,
-								backgroundColor: point.color ?? color,
+								height: `${(point.amount / max) * 60}px`,
+								backgroundColor: color,
 								borderRadius: "3px 3px 0 0",
 								transition: "height 0.4s ease",
 							}}
 						/>
 						<Text size="xs" c="dimmed">
-							{point.month}
+							{point.day}
 						</Text>
 					</Box>
 				))}

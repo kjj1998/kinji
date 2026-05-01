@@ -19,11 +19,11 @@ export function SpendingByCategory({
 	const max = sorted.reduce((sum, cat) => sum + cat.amount, 0) || 1;
 
 	return (
-		<Card withBorder radius="md" p="md">
-			<Title order={5} mb="md">
+		<Card withBorder radius="md" p="sm">
+			<Title order={5} mb="xs">
 				Spending by Category
 			</Title>
-			<Stack gap="sm">
+			<Stack gap="xs">
 				{sorted.map((cat) => (
 					<Box key={cat.name}>
 						<Group justify="space-between" mb={4}>

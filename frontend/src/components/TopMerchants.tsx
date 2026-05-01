@@ -18,11 +18,11 @@ export function TopMerchants({
 	const sorted = [...merchants].sort((a, b) => b.amount - a.amount);
 
 	return (
-		<Card withBorder radius="md" p="md">
-			<Title order={5} mb="md">
+		<Card withBorder radius="md" p="sm">
+			<Title order={5} mb="xs">
 				Top Merchants
 			</Title>
-			<Stack gap="sm">
+			<Stack gap="xs">
 				{sorted.map((merchant, index) => (
 					<Group key={merchant.name} justify="space-between" wrap="nowrap">
 						<Group gap="sm" wrap="nowrap">

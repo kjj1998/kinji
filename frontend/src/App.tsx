@@ -1,8 +1,20 @@
 import "./App.css";
-import { AppShell, Grid, Group, SimpleGrid, Text } from "@mantine/core";
+import {
+	AppShell,
+	Box,
+	Grid,
+	Group,
+	SimpleGrid,
+	Stack,
+	Text,
+} from "@mantine/core";
+import { BiggestChanges } from "./components/BiggestChanges";
 import { MonthlyTrend } from "./components/MonthlyTrend";
+import { MonthSummary } from "./components/MonthSummary";
 import { Navbar } from "./components/Navbar";
+import { RecentTransactions } from "./components/RecentTransactions";
 import { SpendingByCategory } from "./components/SpendingByCategory";
+import { SpendingByDayOfWeek } from "./components/SpendingByDayOfWeek";
 import { SummaryCard } from "./components/SummaryCard";
 import { TopMerchants } from "./components/TopMerchants";
 
@@ -29,6 +41,41 @@ const trend = [
 	{ month: "Feb", amount: 2750, color: "#A8C5DA" },
 	{ month: "Mar", amount: 3600, color: "#A8C5DA" },
 	{ month: "Apr", amount: 3470, color: "#D4A853" },
+];
+
+const transactions = [
+	{ merchant: "Koufu", date: "30 Apr", amount: -8.5, category: "Food" },
+	{ merchant: "Grab", date: "30 Apr", amount: -14.2, category: "Transport" },
+	{
+		merchant: "FairPrice",
+		date: "29 Apr",
+		amount: -63.8,
+		category: "Groceries",
+	},
+	{
+		merchant: "Netflix",
+		date: "28 Apr",
+		amount: -15.98,
+		category: "Subscriptions",
+	},
+	{ merchant: "Salary", date: "25 Apr", amount: 4900.0, category: "Income" },
+];
+
+const changes = [
+	{ category: "Entertainment", current: 95, previous: 180 },
+	{ category: "Shopping", current: 430, previous: 320 },
+	{ category: "Transport", current: 310, previous: 378 },
+	{ category: "Food & Dining", current: 820, previous: 790 },
+];
+
+const dayOfWeek = [
+	{ day: "Mon", amount: 45 },
+	{ day: "Tue", amount: 30 },
+	{ day: "Wed", amount: 80 },
+	{ day: "Thu", amount: 55 },
+	{ day: "Fri", amount: 120 },
+	{ day: "Sat", amount: 210 },
+	{ day: "Sun", amount: 95 },
 ];
 
 function App() {
@@ -73,13 +120,30 @@ function App() {
 						invertDelta
 					/>
 				</SimpleGrid>
-				<Grid mt="md">
+				<Box mt="xs">
+					<MonthSummary
+						currentSpend={3470}
+						lastMonthSpend={3900}
+						topCategory="Food & Dining"
+						topCategoryAmount={820}
+						netSavings={1352}
+						savingsRate={26}
+					/>
+				</Box>
+				<Grid mt="xs">
 					<Grid.Col span={7}>
-						<SpendingByCategory categories={categories} />
-						<MonthlyTrend data={trend} />
+						<Stack gap="xs">
+							<SpendingByCategory categories={categories} />
+							<MonthlyTrend data={trend} />
+							<SpendingByDayOfWeek data={dayOfWeek} />
+						</Stack>
 					</Grid.Col>
 					<Grid.Col span={5}>
-						<TopMerchants merchants={merchants} />
+						<Stack gap="xs">
+							<BiggestChanges changes={changes} topN={3} />
+							<TopMerchants merchants={merchants} />
+							<RecentTransactions transactions={transactions} />
+						</Stack>
 					</Grid.Col>
 				</Grid>
 			</AppShell.Main>
