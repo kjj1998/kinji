@@ -1,5 +1,6 @@
 import "./App.css";
 import { AppShell, Grid, Group, SimpleGrid, Text } from "@mantine/core";
+import { MonthlyTrend } from "./components/MonthlyTrend";
 import { Navbar } from "./components/Navbar";
 import { SpendingByCategory } from "./components/SpendingByCategory";
 import { SummaryCard } from "./components/SummaryCard";
@@ -19,6 +20,15 @@ const merchants = [
 	{ name: "Koufu", amount: 186.0, category: "Food" },
 	{ name: "Uniqlo", amount: 149.9, category: "Shopping" },
 	{ name: "Netflix", amount: 15.98, category: "Subscriptions" },
+];
+
+const trend = [
+	{ month: "Nov", amount: 2900, color: "#A8C5DA" },
+	{ month: "Dec", amount: 4100, color: "#A8C5DA" },
+	{ month: "Jan", amount: 3200, color: "#A8C5DA" },
+	{ month: "Feb", amount: 2750, color: "#A8C5DA" },
+	{ month: "Mar", amount: 3600, color: "#A8C5DA" },
+	{ month: "Apr", amount: 3470, color: "#D4A853" },
 ];
 
 function App() {
@@ -66,6 +76,7 @@ function App() {
 				<Grid mt="md">
 					<Grid.Col span={7}>
 						<SpendingByCategory categories={categories} />
+						<MonthlyTrend data={trend} />
 					</Grid.Col>
 					<Grid.Col span={5}>
 						<TopMerchants merchants={merchants} />
