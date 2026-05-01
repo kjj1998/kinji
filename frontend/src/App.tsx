@@ -1,7 +1,16 @@
 import "./App.css";
 import { AppShell, Group, SimpleGrid, Text } from "@mantine/core";
 import { Navbar } from "./components/Navbar";
+import { SpendingByCategory } from "./components/SpendingByCategory";
 import { SummaryCard } from "./components/SummaryCard";
+
+const categories = [
+	{ name: "Food & Dining", amount: 820, color: "#D4A853" },
+	{ name: "Shopping", amount: 430, color: "#A8C5DA" },
+	{ name: "Transport", amount: 310, color: "#B8D4A8" },
+	{ name: "Subscriptions", amount: 145, color: "#C4A8D4" },
+	{ name: "Entertainment", amount: 95, color: "#D4B8A8" },
+];
 
 function App() {
 	return (
@@ -45,6 +54,7 @@ function App() {
 						invertDelta
 					/>
 				</SimpleGrid>
+				<SpendingByCategory categories={categories} />
 			</AppShell.Main>
 		</AppShell>
 	);
