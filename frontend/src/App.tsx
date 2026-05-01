@@ -1,8 +1,9 @@
 import "./App.css";
-import { AppShell, Group, SimpleGrid, Text } from "@mantine/core";
+import { AppShell, Grid, Group, SimpleGrid, Text } from "@mantine/core";
 import { Navbar } from "./components/Navbar";
 import { SpendingByCategory } from "./components/SpendingByCategory";
 import { SummaryCard } from "./components/SummaryCard";
+import { TopMerchants } from "./components/TopMerchants";
 
 const categories = [
 	{ name: "Food & Dining", amount: 820, color: "#D4A853" },
@@ -10,6 +11,14 @@ const categories = [
 	{ name: "Transport", amount: 310, color: "#B8D4A8" },
 	{ name: "Subscriptions", amount: 145, color: "#C4A8D4" },
 	{ name: "Entertainment", amount: 95, color: "#D4B8A8" },
+];
+
+const merchants = [
+	{ name: "FairPrice", amount: 312.4, category: "Groceries" },
+	{ name: "Grab", amount: 224.8, category: "Transport" },
+	{ name: "Koufu", amount: 186.0, category: "Food" },
+	{ name: "Uniqlo", amount: 149.9, category: "Shopping" },
+	{ name: "Netflix", amount: 15.98, category: "Subscriptions" },
 ];
 
 function App() {
@@ -54,7 +63,14 @@ function App() {
 						invertDelta
 					/>
 				</SimpleGrid>
-				<SpendingByCategory categories={categories} />
+				<Grid mt="md">
+					<Grid.Col span={7}>
+						<SpendingByCategory categories={categories} />
+					</Grid.Col>
+					<Grid.Col span={5}>
+						<TopMerchants merchants={merchants} />
+					</Grid.Col>
+				</Grid>
 			</AppShell.Main>
 		</AppShell>
 	);
