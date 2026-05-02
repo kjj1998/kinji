@@ -13,6 +13,8 @@
 		"@mantine/core": "^9.1.0",
 		"@mantine/hooks": "^9.1.0",
 		"@tabler/icons-react": "^3.41.1",
+		"ag-grid-community": "^35.2.1",
+		"ag-grid-react": "^35.2.1",
 		"react": "^19.2.5",
 		"react-dom": "^19.2.5",
 		"react-router-dom": "^7.14.2"
