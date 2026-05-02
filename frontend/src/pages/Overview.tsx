@@ -1,12 +1,14 @@
 import { Box, Grid, Group, SimpleGrid, Stack, Text } from "@mantine/core";
-import { BiggestChanges } from "../components/BiggestChanges";
-import { MonthlyTrend } from "../components/MonthlyTrend";
-import { MonthSummary } from "../components/MonthSummary";
-import { RecentTransactions } from "../components/RecentTransactions";
-import { SpendingByCategory } from "../components/SpendingByCategory";
-import { SpendingByDayOfWeek } from "../components/SpendingByDayOfWeek";
-import { SummaryCard } from "../components/SummaryCard";
-import { TopMerchants } from "../components/TopMerchants";
+import {
+	BiggestChanges,
+	MonthlyTrend,
+	MonthSummary,
+	RecentTransactions,
+	SpendingByCategory,
+	SpendingByDayOfWeek,
+	SummaryCard,
+	TopMerchants,
+} from "../components";
 
 interface OverviewProps {
 	userName: string;
