@@ -1,4 +1,4 @@
-import { Button, Group, Select, Text, TextInput } from "@mantine/core";
+import { Group, Text } from "@mantine/core";
 import "@mantine/dates/styles.css";
 import type { ColDef } from "ag-grid-community";
 import { AllCommunityModule } from "ag-grid-community";
@@ -8,7 +8,7 @@ import {
 	type CustomCellRendererProps,
 } from "ag-grid-react";
 import { useMemo, useRef, useState } from "react";
-import { AddTransactionForm } from "../components";
+import { AddTransactionForm, TransactionFilters } from "../components";
 import { transactions } from "../data/transactions";
 import type { Transaction } from "../types";
 
@@ -113,37 +113,24 @@ export function Transactions() {
 					Transactions
 				</Text>
 			</Group>
-			<Group justify="space-between" mt="md" mb="sm">
-				<Group>
-					<TextInput
-						placeholder="Search..."
-						style={{ width: 240 }}
-						onChange={(e) =>
-							gridRef.current?.api.setGridOption(
-								"quickFilterText",
-								e.currentTarget.value,
-							)
-						}
-					/>
-					<Select
-						placeholder="All Categories"
-						clearable
-						style={{ width: 180 }}
-						maxDropdownHeight={400}
-						data={CATEGORIES}
-						onChange={(value) => {
-							setRowData(
-								value
-									? allTransactions.filter((t) => t.category === value)
-									: allTransactions,
-							);
-						}}
-					/>
-				</Group>
-				<Button variant="filled" onClick={() => setShowForm((prev) => !prev)}>
-					{showForm ? "Cancel" : "+ Add Transaction"}
-				</Button>
-			</Group>
+			<TransactionFilters
+				categories={CATEGORIES}
+				showForm={showForm}
+				onTextInputChange={(e) =>
+					gridRef.current?.api.setGridOption(
+						"quickFilterText",
+						e.currentTarget.value,
+					)
+				}
+				onCategorySelectChange={(value) => {
+					setRowData(
+						value
+							? allTransactions.filter((t) => t.category === value)
+							: allTransactions,
+					);
+				}}
+				onShowFormClick={() => setShowForm((prev) => !prev)}
+			/>
 			{showForm && (
 				<AddTransactionForm
 					categories={CATEGORIES}

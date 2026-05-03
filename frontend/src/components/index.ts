@@ -8,3 +8,4 @@ export * from "./SpendingByCategory";
 export * from "./SpendingByDayOfWeek";
 export * from "./SummaryCard";
 export * from "./TopMerchants";
+export * from "./TransactionFilters";
