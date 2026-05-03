@@ -1,4 +1,3 @@
-import { Group, Text } from "@mantine/core";
 import "@mantine/dates/styles.css";
 import type { ColDef } from "ag-grid-community";
 import { AllCommunityModule } from "ag-grid-community";
@@ -8,7 +7,7 @@ import {
 	type CustomCellRendererProps,
 } from "ag-grid-react";
 import { useMemo, useRef, useState } from "react";
-import { AddTransactionForm, TransactionFilters } from "../components";
+import { AddTransactionForm, Header, TransactionFilters } from "../components";
 import { transactions } from "../data/transactions";
 import type { Transaction } from "../types";
 
@@ -108,11 +107,7 @@ export function Transactions() {
 
 	return (
 		<>
-			<Group h={60} px="md" style={{ borderBottom: "1px solid #D4A853" }}>
-				<Text fw={400} size="xl">
-					Transactions
-				</Text>
-			</Group>
+			<Header text={"Transactions"} />
 			<TransactionFilters
 				categories={CATEGORIES}
 				showForm={showForm}

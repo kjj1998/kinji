@@ -1,6 +1,7 @@
-import { Box, Grid, Group, SimpleGrid, Stack, Text } from "@mantine/core";
+import { Box, Grid, SimpleGrid, Stack } from "@mantine/core";
 import {
 	BiggestChanges,
+	Header,
 	MonthlyTrend,
 	MonthSummary,
 	RecentTransactions,
@@ -77,11 +78,7 @@ const dayOfWeek = [
 export function Overview({ userName }: OverviewProps) {
 	return (
 		<>
-			<Group h={60} px="md" style={{ borderBottom: "1px solid #D4A853" }}>
-				<Text fw={400} size="xl">
-					Good morning, {userName}
-				</Text>
-			</Group>
+			<Header text={`Good morning, ${userName}`} />
 			<SimpleGrid cols={4} mt="md">
 				<SummaryCard label="Total Income" value={4900} />
 				<SummaryCard label="Total Spent" value={347} delta={2.5} />

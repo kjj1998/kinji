@@ -1,5 +1,6 @@
 export * from "./AddTransactionForm";
 export * from "./BiggestChanges";
+export * from "./Header";
 export * from "./MonthlyTrend";
 export * from "./MonthSummary";
 export * from "./Navbar";
