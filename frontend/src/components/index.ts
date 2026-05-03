@@ -5,6 +5,7 @@ export * from "./MonthlyTrend";
 export * from "./MonthSummary";
 export * from "./Navbar";
 export * from "./RecentTransactions";
+export * from "./SpendingBarChart";
 export * from "./SpendingByCategory";
 export * from "./SpendingByDayOfWeek";
 export * from "./SummaryCard";

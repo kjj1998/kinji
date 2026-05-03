@@ -1,4 +1,5 @@
 import { Card, Text, Title } from "@mantine/core";
+import { calculateDelta } from "../utils";
 
 export interface MonthSummaryProps {
 	currentSpend: number;
@@ -19,15 +20,17 @@ export function MonthSummary({
 	savingsRate,
 	currency = "$",
 }: MonthSummaryProps) {
-	const delta = lastMonthSpend === 0
-		? null
-		: ((currentSpend - lastMonthSpend) / lastMonthSpend) * 100;
+	const delta =
+		lastMonthSpend === 0
+			? null
+			: calculateDelta({ current: currentSpend, previous: lastMonthSpend });
 
-	const spendSentence = delta == null
-		? null
-		: delta > 0
-			? `You spent ${Math.abs(delta).toFixed(0)}% more than last month.`
-			: `You spent ${Math.abs(delta).toFixed(0)}% less than last month.`;
+	const spendSentence =
+		delta == null
+			? null
+			: delta > 0
+				? `You spent ${Math.abs(delta).toFixed(0)}% more than last month.`
+				: `You spent ${Math.abs(delta).toFixed(0)}% less than last month.`;
 
 	const fmt = (amount: number) =>
 		`${currency}${amount.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;

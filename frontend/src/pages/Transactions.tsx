@@ -8,7 +8,7 @@ import {
 } from "ag-grid-react";
 import { useMemo, useRef, useState } from "react";
 import { AddTransactionForm, Header, TransactionFilters } from "../components";
-import { transactions } from "../data/transactions";
+import { categories, transactions } from "../data";
 import type { Transaction } from "../types";
 
 const modules = [AllCommunityModule];
@@ -40,17 +40,6 @@ function SplitCell(props: CustomCellRendererProps<Transaction, number>) {
 
 	return <span style={{ color: "grey" }}>${Math.abs(value).toFixed(2)}</span>;
 }
-
-const CATEGORIES = [
-	"Food",
-	"Transport",
-	"Groceries",
-	"Subscriptions",
-	"Income",
-	"Shopping",
-	"Health",
-	"Utilities",
-];
 
 export function Transactions() {
 	const [allTransactions, setAllTransactions] =
@@ -109,7 +98,7 @@ export function Transactions() {
 		<>
 			<Header text={"Transactions"} />
 			<TransactionFilters
-				categories={CATEGORIES}
+				categories={categories}
 				showForm={showForm}
 				onTextInputChange={(e) =>
 					gridRef.current?.api.setGridOption(
@@ -128,7 +117,7 @@ export function Transactions() {
 			/>
 			{showForm && (
 				<AddTransactionForm
-					categories={CATEGORIES}
+					categories={categories}
 					onAdd={(newTx) => {
 						setAllTransactions((prev) => [newTx, ...prev]);
 						setShowForm(false);

@@ -1,4 +1,5 @@
 import { Card, Divider, Group, Stack, Text, Title } from "@mantine/core";
+import { calculateDelta } from "../utils";
 
 export interface CategoryChange {
 	category: string;
@@ -21,9 +22,10 @@ export function BiggestChanges({
 		.filter((c) => c.previous > 0)
 		.map((c) => ({
 			...c,
-			delta: ((c.current - c.previous) / c.previous) * 100,
+			delta: calculateDelta({ current: c.current, previous: c.previous }),
 			diff: c.current - c.previous,
 		}))
+		.filter((c): c is typeof c & { delta: number } => c.delta !== null)
 		.sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta))
 		.slice(0, topN);
 
@@ -55,7 +57,8 @@ export function BiggestChanges({
 										{fmt(item.previous)} → {fmt(item.current)}
 									</Text>
 									<Text size="sm" c={isUp ? "red" : "green"} fw={500}>
-										{isUp ? "+" : "-"}{fmt(item.diff)}
+										{isUp ? "+" : "-"}
+										{fmt(item.diff)}
 									</Text>
 								</Group>
 							</Group>

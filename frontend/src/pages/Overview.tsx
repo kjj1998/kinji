@@ -2,11 +2,10 @@ import { Box, Grid, SimpleGrid, Stack } from "@mantine/core";
 import {
 	BiggestChanges,
 	Header,
-	MonthlyTrend,
 	MonthSummary,
 	RecentTransactions,
+	SpendingBarChart,
 	SpendingByCategory,
-	SpendingByDayOfWeek,
 	SummaryCard,
 	TopMerchants,
 } from "../components";
@@ -32,12 +31,12 @@ const merchants = [
 ];
 
 const trend = [
-	{ month: "Nov", amount: 2900, color: "#A8C5DA" },
-	{ month: "Dec", amount: 4100, color: "#A8C5DA" },
-	{ month: "Jan", amount: 3200, color: "#A8C5DA" },
-	{ month: "Feb", amount: 2750, color: "#A8C5DA" },
-	{ month: "Mar", amount: 3600, color: "#A8C5DA" },
-	{ month: "Apr", amount: 3470, color: "#D4A853" },
+	{ label: "Nov", amount: 2900, color: "#A8C5DA" },
+	{ label: "Dec", amount: 4100, color: "#A8C5DA" },
+	{ label: "Jan", amount: 3200, color: "#A8C5DA" },
+	{ label: "Feb", amount: 2750, color: "#A8C5DA" },
+	{ label: "Mar", amount: 3600, color: "#A8C5DA" },
+	{ label: "Apr", amount: 3470, color: "#D4A853" },
 ];
 
 const transactions = [
@@ -66,13 +65,13 @@ const changes = [
 ];
 
 const dayOfWeek = [
-	{ day: "Mon", amount: 45 },
-	{ day: "Tue", amount: 30 },
-	{ day: "Wed", amount: 80 },
-	{ day: "Thu", amount: 55 },
-	{ day: "Fri", amount: 120 },
-	{ day: "Sat", amount: 210 },
-	{ day: "Sun", amount: 95 },
+	{ label: "Mon", amount: 45, color: "#A8C5DA" },
+	{ label: "Tue", amount: 30, color: "#A8C5DA" },
+	{ label: "Wed", amount: 80, color: "#A8C5DA" },
+	{ label: "Thu", amount: 55, color: "#A8C5DA" },
+	{ label: "Fri", amount: 120, color: "#A8C5DA" },
+	{ label: "Sat", amount: 210, color: "#D4A853" },
+	{ label: "Sun", amount: 95, color: "#A8C5DA" },
 ];
 
 export function Overview({ userName }: OverviewProps) {
@@ -105,8 +104,16 @@ export function Overview({ userName }: OverviewProps) {
 				<Grid.Col span={7}>
 					<Stack gap="xs">
 						<SpendingByCategory categories={categories} />
-						<MonthlyTrend data={trend} />
-						<SpendingByDayOfWeek data={dayOfWeek} />
+						<SpendingBarChart
+							title="Monthly Trend"
+							data={trend}
+							height={160}
+							formatAmount={(v) => `${(v / 1000).toFixed(1)}k`} // TODO: fix the formatting when values are less than a thousand
+						/>
+						<SpendingBarChart
+							title="Spending by Day of Week"
+							data={dayOfWeek}
+						/>
 					</Stack>
 				</Grid.Col>
 				<Grid.Col span={5}>
