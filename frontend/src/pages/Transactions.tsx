@@ -1,4 +1,5 @@
 import "@mantine/dates/styles.css";
+import { useQueryClient } from "@tanstack/react-query";
 import type { ColDef } from "ag-grid-community";
 import { AllCommunityModule } from "ag-grid-community";
 import {
@@ -8,7 +9,8 @@ import {
 } from "ag-grid-react";
 import { useMemo, useRef, useState } from "react";
 import { AddTransactionForm, Header, TransactionFilters } from "../components";
-import { categories, transactions } from "../data";
+import { categories } from "../data";
+import { useTransactions } from "../hooks";
 import type { Transaction } from "../types";
 
 const modules = [AllCommunityModule];
@@ -42,9 +44,8 @@ function SplitCell(props: CustomCellRendererProps<Transaction, number>) {
 }
 
 export function Transactions() {
-	const [allTransactions, setAllTransactions] =
-		useState<Transaction[]>(transactions);
-	const [rowData, setRowData] = useState<Transaction[]>(transactions);
+	const queryClient = useQueryClient();
+	const { data: allTransactions = [] } = useTransactions("james");
 	const [showForm, setShowForm] = useState(false);
 
 	const colDefs = useMemo<ColDef<Transaction>[]>(
@@ -94,6 +95,8 @@ export function Transactions() {
 
 	const gridRef = useRef<AgGridReact>(null);
 
+	console.log(allTransactions);
+
 	return (
 		<>
 			<Header text={"Transactions"} />
@@ -107,11 +110,14 @@ export function Transactions() {
 					)
 				}
 				onCategorySelectChange={(value) => {
-					setRowData(
-						value
-							? allTransactions.filter((t) => t.category === value)
-							: allTransactions,
-					);
+					gridRef.current?.api
+						.setColumnFilterModel(
+							"category",
+							value
+								? { filterType: "text", type: "equals", filter: value }
+								: null,
+						)
+						.then(() => gridRef.current?.api.onFilterChanged());
 				}}
 				onShowFormClick={() => setShowForm((prev) => !prev)}
 			/>
@@ -119,7 +125,10 @@ export function Transactions() {
 				<AddTransactionForm
 					categories={categories}
 					onAdd={(newTx) => {
-						setAllTransactions((prev) => [newTx, ...prev]);
+						queryClient.setQueryData(
+							["transactions", "james"],
+							(prev: Transaction[]) => [newTx, ...prev],
+						);
 						setShowForm(false);
 					}}
 				/>
@@ -131,7 +140,7 @@ export function Transactions() {
 					}}
 				>
 					<AgGridReact
-						rowData={rowData}
+						rowData={allTransactions}
 						columnDefs={colDefs}
 						pagination={true}
 						paginationPageSize={20}
