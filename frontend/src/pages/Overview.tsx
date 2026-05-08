@@ -113,6 +113,7 @@ export function Overview({ userName }: OverviewProps) {
 						<SpendingBarChart
 							title="Spending by Day of Week"
 							data={dayOfWeek}
+							height={160}
 						/>
 					</Stack>
 				</Grid.Col>
