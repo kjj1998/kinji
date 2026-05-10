@@ -4,16 +4,19 @@ import (
 	"context"
 	"fmt"
 	"math"
-	"slices"
-	"strings"
 	"time"
 
 	"github.com/kohjunjie/kinji/bff/internal/model"
 	"github.com/kohjunjie/kinji/bff/internal/repository"
 )
 
+const (
+	monthLayout   = "2006-01"
+	summaryMonths = 6
+)
+
 type TransactionService interface {
-	Summary(ctx context.Context, userID string) (*model.TransactionSummary, error)
+	Summary(ctx context.Context, userID string, from, to *time.Time) (*model.TransactionSummary, error)
 }
 
 type transactionService struct {
@@ -32,70 +35,50 @@ func NewTransactionService(repo repository.TransactionRepository) TransactionSer
 	return &transactionService{repo: repo}
 }
 
-func (s *transactionService) Summary(ctx context.Context, userID string) (*model.TransactionSummary, error) {
-	now := time.Now()
-	to := now.Format("2006-01")
-	from := now.AddDate(0, -5, 0).Format("2006-01")
+func (s *transactionService) Summary(ctx context.Context, userID string, from, to *time.Time) (*model.TransactionSummary, error) {
+	if from == nil || to == nil {
+		now := time.Now()
+		t := now.AddDate(0, -(summaryMonths - 1), 0)
+		from = &t
+		to = &now
+	}
 
-	allTx, err := s.repo.ListRange(ctx, userID, from, to)
+	allTx, err := s.repo.ListRange(ctx, userID, from.Format(monthLayout), to.Format(monthLayout))
 	if err != nil {
 		return nil, err
 	}
 
-	byMonth := make(map[string][]model.Transaction)
-	for _, t := range allTx {
-		month := t.Date[:7]
-		byMonth[month] = append(byMonth[month], t)
-	}
+	transactionsByMonth := groupTransactionsByMonth(allTx)
+	metrics := calcMetricsByMonth(transactionsByMonth)
 
-	metrics := make(map[string]monthMetrics, len(byMonth))
-	for month, txs := range byMonth {
-		metrics[month] = calcMonthMetrics(txs)
-	}
+	curMonthDateString := to.Format(monthLayout)
+	prevMonthDateString := to.AddDate(0, -1, 0).Format(monthLayout)
+	curMonthMetrics := metrics[curMonthDateString]
+	prevMonthMetrics := metrics[prevMonthDateString]
 
-	curMonth := now.Format("2006-01")
-	prevMonth := now.AddDate(0, -1, 0).Format("2006-01")
+	changeInSpending := percentageChange(curMonthMetrics.totalSpent, prevMonthMetrics.totalSpent)
+	changeInNetSavings := percentageChange(curMonthMetrics.netSavings, prevMonthMetrics.netSavings)
+	changeInSavingsRate := percentageChange(curMonthMetrics.savingsRate, prevMonthMetrics.savingsRate)
 
-	cur := metrics[curMonth]
-	prev := metrics[prevMonth]
-
-	spendChange := percentageChange(cur.totalSpent, prev.totalSpent)
-	var delta *float64
-	if len(byMonth[prevMonth]) > 0 {
-		delta = &spendChange
-	}
-	var summary string
-	if len(cur.byCategory) > 0 {
-		summary = monthlySummary(delta, cur.byCategory[0].Category, cur.byCategory[0].Amount, cur.netSavings, cur.savingsRate)
-	}
-
-	trend := make([]model.DateSpending, 6)
-	for i := range 6 {
-		month := now.AddDate(0, -(5 - i), 0).Format("2006-01")
-		trend[i] = model.DateSpending{
-			Date:   month,
-			Amount: metrics[month].totalSpent,
-		}
-	}
-
-	spendingByDayOfWeek := spendingByDayOfWeek(byMonth[curMonth])
-	categorySpendingChanges := categorySpendingChanges(cur.byCategory, prev.byCategory)
-	topMerchants := topMerchants(byMonth[curMonth])
-	recent := byMonth[curMonth]
-	slices.Reverse(recent)
+	monthlySummary := generateMonthlySummary(changeInSpending, len(transactionsByMonth[prevMonthDateString]) > 0, curMonthMetrics)
+	trend := buildMonthlyTrend(to, metrics)
+	spendingByDayOfWeek := computeSpendingByDayOfWeek(transactionsByMonth[curMonthDateString])
+	categorySpendingChanges := computeSpendingChangeInEachCategory(curMonthMetrics.byCategory, prevMonthMetrics.byCategory)
+	topMerchants := findTopSpendingMerchants(transactionsByMonth[curMonthDateString])
+	recentTransactions := recentTransactions(transactionsByMonth[curMonthDateString], 5)
 
 	return &model.TransactionSummary{
-		TotalIncome:         cur.totalIncome,
-		TotalSpent:          model.ValueAndChange{Value: cur.totalSpent, Change: spendChange},
-		NetSavings:          model.ValueAndChange{Value: cur.netSavings, Change: percentageChange(cur.netSavings, prev.netSavings)},
-		SavingsRate:         model.ValueAndChange{Value: cur.savingsRate, Change: percentageChange(cur.savingsRate, prev.savingsRate)},
-		MonthlySummary:      summary,
-		SpendingByCategory:  cur.byCategory,
+		TotalIncome:         curMonthMetrics.totalIncome,
+		TotalSpent:          model.ValueAndChange{Value: curMonthMetrics.totalSpent, Change: changeInSpending},
+		NetSavings:          model.ValueAndChange{Value: curMonthMetrics.netSavings, Change: changeInNetSavings},
+		SavingsRate:         model.ValueAndChange{Value: curMonthMetrics.savingsRate, Change: changeInSavingsRate},
+		MonthlySummary:      monthlySummary,
+		SpendingByCategory:  curMonthMetrics.byCategory,
 		MonthlyTrend:        trend,
 		SpendingByDayOfWeek: spendingByDayOfWeek,
 		BiggestChanges:      categorySpendingChanges,
 		TopMerchants:        topMerchants,
-		RecentTransactions:  recent,
+		RecentTransactions:  recentTransactions,
 	}, nil
 }
 
@@ -119,32 +102,33 @@ func calcMonthMetrics(txs []model.Transaction) monthMetrics {
 	sortByAmountDesc(byCategory, func(c model.CategorySpending) float64 { return c.Amount })
 
 	return monthMetrics{
-		totalIncome: income,
-		totalSpent:  spent,
-		netSavings:  net,
-		savingsRate: safeDivide(net, income) * 100,
+		totalIncome: roundTo2Dp(income),
+		totalSpent:  roundTo2Dp(spent),
+		netSavings:  roundTo2Dp(net),
+		savingsRate: roundTo2Dp(safeDivide(net, income) * 100),
 		byCategory:  byCategory,
 	}
 }
 
-// monthlySummary generates a human-readable summary sentence.
-// spendDelta is nil when there is no previous month to compare against.
-func monthlySummary(spendDelta *float64, topCategory model.Category, topCategoryAmount, netSavings, savingsRate float64) string {
-	s := ""
-	if spendDelta != nil {
-		direction := "more"
-		if *spendDelta < 0 {
-			direction = "less"
-		}
-		s = fmt.Sprintf("You spent %.0f%% %s than last month. ", math.Abs(*spendDelta), direction)
+func generateMonthlySummary(spendChange float64, hasPrevMonth bool, cur monthMetrics) string {
+	if len(cur.byCategory) == 0 {
+		return ""
 	}
-	return s + fmt.Sprintf(
-		"Your biggest expense was %s at %s, and you saved %s (%.0f%% of income).",
-		topCategory, formatAmount(topCategoryAmount), formatAmount(netSavings), savingsRate,
+	suffix := fmt.Sprintf(
+		"Your biggest expense was %s at $%.2f, and you saved $%.2f (%.2f%% of income).",
+		cur.byCategory[0].Category, cur.byCategory[0].Amount, cur.netSavings, cur.savingsRate,
 	)
+	if !hasPrevMonth {
+		return suffix
+	}
+	direction := "more"
+	if spendChange < 0 {
+		direction = "less"
+	}
+	return fmt.Sprintf("You spent %.0f%% %s than last month. ", math.Abs(spendChange), direction) + suffix
 }
 
-func spendingByDayOfWeek(txs []model.Transaction) []model.DateSpending {
+func computeSpendingByDayOfWeek(txs []model.Transaction) []model.DateSpending {
 	totals := make(map[time.Weekday]float64)
 	for _, t := range txs {
 		if !isExpense(t) {
@@ -166,14 +150,14 @@ func spendingByDayOfWeek(txs []model.Transaction) []model.DateSpending {
 	for i, day := range days {
 		result[i] = model.DateSpending{
 			Date:   day.String()[:3],
-			Amount: totals[day],
+			Amount: roundTo2Dp(totals[day]),
 		}
 	}
 
 	return result
 }
 
-func categorySpendingChanges(cur, prev []model.CategorySpending) []model.CategorySpendingChange {
+func computeSpendingChangeInEachCategory(cur, prev []model.CategorySpending) []model.CategorySpendingChange {
 	prevMap := make(map[model.Category]float64, len(prev))
 	for _, c := range prev {
 		prevMap[c.Category] = c.Amount
@@ -184,15 +168,15 @@ func categorySpendingChanges(cur, prev []model.CategorySpending) []model.Categor
 		prevAmount := prevMap[c.Category]
 		result[i] = model.CategorySpendingChange{
 			Category:         c.Category,
-			Amount:           c.Amount,
-			Change:           c.Amount - prevAmount,
+			Amount:           roundTo2Dp(c.Amount),
+			Change:           roundTo2Dp(c.Amount - prevAmount),
 			PercentageChange: int(percentageChange(c.Amount, prevAmount)),
 		}
 	}
 	return result
 }
 
-func topMerchants(txs []model.Transaction) []model.Merchant {
+func findTopSpendingMerchants(txs []model.Transaction) []model.Merchant {
 	totals := make(map[string]float64)
 	for _, t := range txs {
 		if isExpense(t) {
@@ -202,50 +186,59 @@ func topMerchants(txs []model.Transaction) []model.Merchant {
 
 	result := make([]model.Merchant, 0, len(totals))
 	for name, amount := range totals {
-		result = append(result, model.Merchant{Name: name, Amount: amount})
+		result = append(result, model.Merchant{Name: name, Amount: roundTo2Dp(amount)})
 	}
 	sortByAmountDesc(result, func(m model.Merchant) float64 { return m.Amount })
+	if len(result) > 5 {
+		result = result[:5]
+	}
 	return result
 }
 
-func formatAmount(amount float64) string {
-	digits := fmt.Sprintf("%d", int(math.Round(amount)))
-	n := len(digits)
-	var b strings.Builder
-	b.Grow(1 + n + (n-1)/3)
-	b.WriteByte('$')
-	for i, ch := range digits {
-		if i > 0 && (n-i)%3 == 0 {
-			b.WriteByte(',')
+func recentTransactions(txs []model.Transaction, n int) []model.Transaction {
+	if n > len(txs) {
+		n = len(txs)
+	}
+	out := make([]model.Transaction, n)
+	for i := range n {
+		out[i] = txs[len(txs)-1-i]
+	}
+	return out
+}
+
+func buildMonthlyTrend(to *time.Time, metrics map[string]monthMetrics) []model.DateSpending {
+	toMonth := time.Date(to.Year(), to.Month(), 1, 0, 0, 0, 0, to.Location())
+	trend := make([]model.DateSpending, summaryMonths)
+	for i := range summaryMonths {
+		month := toMonth.AddDate(0, -(summaryMonths-1-i), 0).Format(monthLayout)
+		trend[i] = model.DateSpending{
+			Date:   month,
+			Amount: roundTo2Dp(metrics[month].totalSpent),
 		}
-		b.WriteRune(ch)
 	}
-	return b.String()
+	return trend
 }
 
-func percentageChange(current, previous float64) float64 {
-	return safeDivide(current-previous, previous) * 100
+func calcMetricsByMonth(transactionsByMonth map[string][]model.Transaction) map[string]monthMetrics {
+	metrics := make(map[string]monthMetrics, len(transactionsByMonth))
+	for month, txs := range transactionsByMonth {
+		metrics[month] = calcMonthMetrics(txs)
+	}
+	return metrics
 }
 
-func safeDivide(a, b float64) float64 {
-	if b == 0 {
-		return 0
+func groupTransactionsByMonth(txs []model.Transaction) map[string][]model.Transaction {
+	byMonth := make(map[string][]model.Transaction)
+	for _, t := range txs {
+		if len(t.Date) < 7 {
+			continue
+		}
+		month := t.Date[:7]
+		byMonth[month] = append(byMonth[month], t)
 	}
-	return a / b
+	return byMonth
 }
 
 func isExpense(t model.Transaction) bool {
 	return t.Category != model.CategoryIncome && t.Amount < 0
-}
-
-func sortByAmountDesc[T any](s []T, amount func(T) float64) {
-	slices.SortFunc(s, func(a, b T) int {
-		if amount(b) > amount(a) {
-			return 1
-		}
-		if amount(b) < amount(a) {
-			return -1
-		}
-		return 0
-	})
 }

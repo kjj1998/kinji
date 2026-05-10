@@ -39,7 +39,18 @@ func (h *TransactionHandler) Summary(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "User ID not provided")
 		return
 	}
-	summary, err := h.service.Summary(r.Context(), id)
+
+	q := r.URL.Query()
+	from, ok := parseDate(w, q.Get("from"), "from")
+	if !ok {
+		return
+	}
+	to, ok := parseDate(w, q.Get("to"), "to")
+	if !ok {
+		return
+	}
+
+	summary, err := h.service.Summary(r.Context(), id, from, to)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "failed to calculate monthly summary")
 		return
