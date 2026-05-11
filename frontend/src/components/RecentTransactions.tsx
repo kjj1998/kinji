@@ -1,21 +1,12 @@
 import { Card, Divider, Group, Stack, Text, Title } from "@mantine/core";
-
-export interface TransactionItem {
-	merchant: string;
-	date: string;
-	amount: number;
-	category: string;
-}
+import type { Transaction } from "../types";
+import { formatCurrency } from "../utils";
 
 export interface RecentTransactionsProps {
-	transactions: TransactionItem[];
-	currency?: string;
+	transactions: Transaction[];
 }
 
-export function RecentTransactions({
-	transactions,
-	currency = "$",
-}: RecentTransactionsProps) {
+export function RecentTransactions({ transactions }: RecentTransactionsProps) {
 	return (
 		<Card withBorder radius="md" p="sm">
 			<Title order={5} mb="xs">
@@ -42,11 +33,7 @@ export function RecentTransactions({
 									style={{ whiteSpace: "nowrap" }}
 								>
 									{isIncome ? "+" : ""}
-									{currency}
-									{Math.abs(tx.amount).toLocaleString("en-US", {
-										minimumFractionDigits: 2,
-										maximumFractionDigits: 2,
-									})}
+									{formatCurrency(Math.abs(tx.amount))}
 								</Text>
 							</Group>
 							{index < transactions.length - 1 && <Divider />}

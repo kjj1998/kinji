@@ -48,20 +48,23 @@ type CategorySpendingChange struct {
 }
 
 type Merchant struct {
-	Name   string  `json:"name"`
-	Amount float64 `json:"amount"`
+	Name     string   `json:"name"`
+	Amount   float64  `json:"amount"`
+	Category Category `json:"category"`
 }
 
 type TransactionSummary struct {
-	TotalIncome         float64                  `json:"totalIncome"`
-	TotalSpent          ValueAndChange           `json:"totalSpent"`
-	NetSavings          ValueAndChange           `json:"netSavings"`
-	SavingsRate         ValueAndChange           `json:"savingsRate"`
-	MonthlySummary      string                   `json:"monthlySummary"`
-	SpendingByCategory  []CategorySpending       `json:"spendingByCategory"`
-	MonthlyTrend        []DateSpending           `json:"monthlyTrend"`
-	SpendingByDayOfWeek []DateSpending           `json:"spendingByDayOfWeek"`
-	BiggestChanges      []CategorySpendingChange `json:"biggestChanges"`
-	TopMerchants        []Merchant               `json:"topMerchants"`
-	RecentTransactions  []Transaction            `json:"recentTransactions"`
+	TotalIncome        float64                  `json:"totalIncome"`
+	TotalSpent         ValueAndChange           `json:"totalSpent"`
+	NetSavings         ValueAndChange           `json:"netSavings"`
+	SavingsRate        ValueAndChange           `json:"savingsRate"`
+	LastMonthSpent     float64                  `json:"lastMonthSpent"`
+	TopCategory        *CategorySpending        `json:"topCategory"`
+	MonthlySummary     string                   `json:"monthlySummary"`
+	SpendingByCategory []CategorySpending       `json:"spendingByCategory"`
+	MonthlyTrend       []DateSpending           `json:"monthlyTrend"`
+	DailyTrend         []DateSpending           `json:"dailyTrend"`
+	BiggestChanges     []CategorySpendingChange `json:"biggestChanges"`
+	TopMerchants       []Merchant               `json:"topMerchants"`
+	RecentTransactions []Transaction            `json:"recentTransactions"`
 }

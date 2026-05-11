@@ -7,24 +7,25 @@ export interface ValueAndChange {
 
 export interface CategorySpending {
 	category: string;
-	value: number;
+	amount: number;
 }
 
 export interface DateSpending {
-	dayOrMonth: string;
-	value: number;
+	date: string;
+	amount: number;
 }
 
 export interface CategorySpendingChange {
-	categorySpending: CategorySpending;
-	valueChange: number;
+	category: string;
+	amount: number;
+	change: number;
 	percentageChange: number;
 }
 
 export interface Merchant {
 	name: string;
 	category: string;
-	value: number;
+	amount: number;
 }
 
 export interface Summary {
@@ -32,10 +33,12 @@ export interface Summary {
 	totalSpent: ValueAndChange;
 	netSavings: ValueAndChange;
 	savingsRate: ValueAndChange;
+	lastMonthSpent: number;
+	topCategory: CategorySpending;
 	monthlySummary: string;
 	spendingByCategory: CategorySpending[];
 	monthlyTrend: DateSpending[];
-	spendingByDayOfWeek: DateSpending[];
+	dailyTrend: DateSpending[];
 	biggestChanges: CategorySpendingChange[];
 	topMerchants: Merchant[];
 	recentTransactions: Transaction[];

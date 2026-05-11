@@ -95,8 +95,6 @@ export function Transactions() {
 
 	const gridRef = useRef<AgGridReact>(null);
 
-	console.log(allTransactions);
-
 	return (
 		<>
 			<Header text={"Transactions"} />

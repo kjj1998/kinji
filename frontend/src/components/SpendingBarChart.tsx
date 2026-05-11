@@ -1,4 +1,5 @@
 import { Box, Card, Group, Text, Title } from "@mantine/core";
+import { formatCurrency } from "../utils";
 
 export interface BarChartDataPoint {
 	label: string;
@@ -9,19 +10,10 @@ export interface BarChartDataPoint {
 export interface BarChartProps {
 	title: string;
 	data: BarChartDataPoint[];
-	currency?: string;
-	color?: string;
 	height?: number;
-	formatAmount?: (amount: number) => string;
 }
 
-export function SpendingBarChart({
-	title,
-	data,
-	currency = "$",
-	height = 120,
-	formatAmount,
-}: BarChartProps) {
+export function SpendingBarChart({ title, data, height = 160 }: BarChartProps) {
 	const max = Math.max(...data.map((d) => d.amount)) || 1;
 
 	return (
@@ -42,10 +34,7 @@ export function SpendingBarChart({
 						}}
 					>
 						<Text size="xs" c="dimmed">
-							{currency}
-							{formatAmount !== undefined
-								? formatAmount(point.amount)
-								: point.amount}
+							{formatCurrency(point.amount)}
 						</Text>
 						<Box
 							style={{
