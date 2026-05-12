@@ -11,8 +11,6 @@ import {
 	UnstyledButton,
 } from "@mantine/core";
 import {
-	IconCategory,
-	IconChartBar,
 	IconFileText,
 	IconLayoutDashboard,
 	IconList,
@@ -20,12 +18,7 @@ import {
 } from "@tabler/icons-react";
 import classes from "./Navbar.module.css";
 
-export type NavbarItemKey =
-	| "overview"
-	| "statements"
-	| "transactions"
-	| "categories"
-	| "insights";
+export type NavbarItemKey = "overview" | "statements" | "transactions";
 
 export interface NavbarProps {
 	current: NavbarItemKey;
@@ -69,8 +62,6 @@ export function Navbar({
 			badge: statementsMissing,
 		},
 		{ key: "transactions", label: "Transactions", icon: IconList },
-		{ key: "categories", label: "Categories", icon: IconCategory },
-		{ key: "insights", label: "Insights", icon: IconChartBar },
 	];
 
 	const progress = monthStatus.expected

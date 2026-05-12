@@ -1,20 +1,39 @@
 import "./App.css";
 import { AppShell } from "@mantine/core";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Route, Routes } from "react-router-dom";
+import { useCallback } from "react";
+import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
+import type { NavbarItemKey } from "./components/Navbar";
 import { Navbar } from "./components/Navbar";
 import { Overview } from "./pages/Overview";
 import { Transactions } from "./pages/Transactions";
 
 const queryClient = new QueryClient();
 
+const pathToKey: Record<string, NavbarItemKey> = {
+	"/overview": "overview",
+	"/transactions": "transactions",
+	"/statements": "statements",
+};
+
+const keyToPath: Record<NavbarItemKey, string> = {
+	overview: "/overview",
+	transactions: "/transactions",
+	statements: "/statements",
+};
+
 function App() {
+	const navigate = useNavigate();
+	const location = useLocation();
+	const current = pathToKey[location.pathname] ?? "overview";
+	const handleNavigate = useCallback((key: NavbarItemKey) => navigate(keyToPath[key]), [navigate]);
+
 	return (
 		<QueryClientProvider client={queryClient}>
 			<AppShell navbar={{ width: 250, breakpoint: "sm" }} padding="md">
 				<Navbar
-					current="overview"
-					onNavigate={() => {}}
+					current={current}
+					onNavigate={handleNavigate}
 					onUpload={() => {}}
 					monthStatus={{
 						label: "April 2026",
@@ -30,7 +49,7 @@ function App() {
 				/>
 				<AppShell.Main>
 					<Routes>
-						<Route path="/" element={<Overview userName="James" />} />
+						<Route path="/" element={<Navigate to="/overview" replace />} />
 						<Route path="/overview" element={<Overview userName="James" />} />
 						<Route path="/transactions" element={<Transactions />} />
 					</Routes>
