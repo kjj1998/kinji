@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/kohjunjie/kinji/bff/internal/config"
-	"github.com/kohjunjie/kinji/bff/internal/repository"
+	"github.com/kohjunjie/kinji/bff/internal/repository/dynamo"
 	"github.com/kohjunjie/kinji/bff/internal/server"
 )
 
@@ -20,12 +20,12 @@ func main() {
 
 	cfg := config.Load()
 
-	dynamoClient, err := repository.NewDynamoClient(cfg.DynamoEndpoint, cfg.DynamoRegion)
+	dynamoClient, err := dynamo.NewClient(cfg.DynamoEndpoint, cfg.DynamoRegion)
 	if err != nil {
 		slog.Error("failed to create dynamo client", "error", err)
 		os.Exit(1)
 	}
-	dynamoRepo := repository.NewDynamoRepository(dynamoClient, cfg.DynamoTable)
+	dynamoRepo := dynamo.NewRepository(dynamoClient, cfg.DynamoTable)
 	handler := server.New(dynamoRepo, cfg.CORSOrigin)
 
 	srv := &http.Server{

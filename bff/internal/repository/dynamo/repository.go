@@ -1,4 +1,4 @@
-package repository
+package dynamo
 
 import (
 	"context"
@@ -13,12 +13,12 @@ import (
 	"github.com/kohjunjie/kinji/bff/internal/model"
 )
 
-type DynamoRepository struct {
+type Repository struct {
 	client *dynamodb.Client
 	table  string
 }
 
-func NewDynamoClient(endpoint, region string) (*dynamodb.Client, error) {
+func NewClient(endpoint, region string) (*dynamodb.Client, error) {
 	cfg, err := config.LoadDefaultConfig(
 		context.Background(),
 		config.WithRegion(region),
@@ -35,11 +35,11 @@ func NewDynamoClient(endpoint, region string) (*dynamodb.Client, error) {
 	return client, nil
 }
 
-func NewDynamoRepository(client *dynamodb.Client, table string) *DynamoRepository {
-	return &DynamoRepository{client: client, table: table}
+func NewRepository(client *dynamodb.Client, table string) *Repository {
+	return &Repository{client: client, table: table}
 }
 
-func (d *DynamoRepository) queryTransactions(ctx context.Context, keyEx expression.KeyConditionBuilder) ([]model.Transaction, error) {
+func (d *Repository) queryTransactions(ctx context.Context, keyEx expression.KeyConditionBuilder) ([]model.Transaction, error) {
 	expr, err := expression.NewBuilder().WithKeyCondition(keyEx).Build()
 	if err != nil {
 		return nil, fmt.Errorf("build expression: %w", err)
@@ -73,7 +73,7 @@ func (d *DynamoRepository) queryTransactions(ctx context.Context, keyEx expressi
 	return transactions, nil
 }
 
-func (d *DynamoRepository) List(ctx context.Context, userID string, month string, year string) ([]model.Transaction, error) {
+func (d *Repository) List(ctx context.Context, userID string, month string, year string) ([]model.Transaction, error) {
 	pk := expression.Key("user").Equal(expression.Value(fmt.Sprintf("USER#%s", userID)))
 	var keyEx expression.KeyConditionBuilder
 	if month != "" && year != "" {
@@ -87,7 +87,7 @@ func (d *DynamoRepository) List(ctx context.Context, userID string, month string
 	return d.queryTransactions(ctx, keyEx)
 }
 
-func (d *DynamoRepository) ListRange(ctx context.Context, userID, from, to string) ([]model.Transaction, error) {
+func (d *Repository) ListRange(ctx context.Context, userID, from, to string) ([]model.Transaction, error) {
 	pk := expression.Key("user").Equal(expression.Value(fmt.Sprintf("USER#%s", userID)))
 	keyEx := pk.And(expression.Key("item").Between(
 		expression.Value(fmt.Sprintf("TX#%s-01", from)),
@@ -96,17 +96,17 @@ func (d *DynamoRepository) ListRange(ctx context.Context, userID, from, to strin
 	return d.queryTransactions(ctx, keyEx)
 }
 
-func (d *DynamoRepository) Create(ctx context.Context, tx model.Transaction) error {
+func (d *Repository) Create(ctx context.Context, tx model.Transaction) error {
 	// TODO
 	return nil
 }
 
-func (d *DynamoRepository) Update(ctx context.Context, tx model.Transaction) error {
+func (d *Repository) Update(ctx context.Context, tx model.Transaction) error {
 	// TODO
 	return nil
 }
 
-func (d *DynamoRepository) Delete(ctx context.Context, userID, id string) error {
+func (d *Repository) Delete(ctx context.Context, userID, id string) error {
 	// TODO
 	return nil
 }
