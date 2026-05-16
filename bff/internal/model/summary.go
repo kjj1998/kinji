@@ -1,16 +1,16 @@
 package model
 
-type ValueAndChange struct {
-	Value  float64 `json:"value"`
+type ValueAndChange[T int | float64] struct {
+	Value  T       `json:"value"`
 	Change float64 `json:"change"`
 }
 
 type TransactionSummary struct {
-	TotalIncome        float64                  `json:"totalIncome"`
-	TotalSpent         ValueAndChange           `json:"totalSpent"`
-	NetSavings         ValueAndChange           `json:"netSavings"`
-	SavingsRate        ValueAndChange           `json:"savingsRate"`
-	LastMonthSpent     float64                  `json:"lastMonthSpent"`
+	TotalIncome        int                      `json:"totalIncome"`
+	TotalSpent         ValueAndChange[int]      `json:"totalSpent"`
+	NetSavings         ValueAndChange[int]      `json:"netSavings"`
+	SavingsRate        ValueAndChange[float64]  `json:"savingsRate"`
+	LastMonthSpent     int                      `json:"lastMonthSpent"`
 	TopCategory        *CategorySpending        `json:"topCategory"`
 	MonthlySummary     string                   `json:"monthlySummary"`
 	SpendingByCategory []CategorySpending       `json:"spendingByCategory"`

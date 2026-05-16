@@ -39,7 +39,10 @@ func NewRepository(client *dynamodb.Client, table string) *Repository {
 	return &Repository{client: client, table: table}
 }
 
-func (d *Repository) queryTransactions(ctx context.Context, keyEx expression.KeyConditionBuilder) ([]model.Transaction, error) {
+func (d *Repository) queryTransactions(
+	ctx context.Context,
+	keyEx expression.KeyConditionBuilder,
+) ([]model.Transaction, error) {
 	expr, err := expression.NewBuilder().WithKeyCondition(keyEx).Build()
 	if err != nil {
 		return nil, fmt.Errorf("build expression: %w", err)
@@ -74,12 +77,12 @@ func (d *Repository) queryTransactions(ctx context.Context, keyEx expression.Key
 }
 
 func (d *Repository) List(ctx context.Context, userID string, month string, year string) ([]model.Transaction, error) {
-	pk := expression.Key("user").Equal(expression.Value(fmt.Sprintf("USER#%s", userID)))
+	pk := expression.Key("key").Equal(expression.Value(fmt.Sprintf("USER#%s", userID)))
 	var keyEx expression.KeyConditionBuilder
 	if month != "" && year != "" {
 		keyEx = pk.And(expression.Key("item").Between(
-			expression.Value(fmt.Sprintf("TX#%s-%s-01", year, month)),
-			expression.Value(fmt.Sprintf("TX#%s-%s-31~", year, month)),
+			expression.Value(fmt.Sprintf("TRANSACTION#%s-%s-01T00:00:00Z", year, month)),
+			expression.Value(fmt.Sprintf("TRANSACTION#%s-%s-31~", year, month)),
 		))
 	} else {
 		keyEx = pk
@@ -88,10 +91,10 @@ func (d *Repository) List(ctx context.Context, userID string, month string, year
 }
 
 func (d *Repository) ListRange(ctx context.Context, userID, from, to string) ([]model.Transaction, error) {
-	pk := expression.Key("user").Equal(expression.Value(fmt.Sprintf("USER#%s", userID)))
+	pk := expression.Key("key").Equal(expression.Value(fmt.Sprintf("USER#%s", userID)))
 	keyEx := pk.And(expression.Key("item").Between(
-		expression.Value(fmt.Sprintf("TX#%s-01", from)),
-		expression.Value(fmt.Sprintf("TX#%s-31~", to)),
+		expression.Value(fmt.Sprintf("TRANSACTION#%s-01T00:00:00Z", from)),
+		expression.Value(fmt.Sprintf("TRANSACTION#%s-31~", to)),
 	))
 	return d.queryTransactions(ctx, keyEx)
 }

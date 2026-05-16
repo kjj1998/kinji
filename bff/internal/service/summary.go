@@ -24,9 +24,9 @@ type summaryService struct {
 }
 
 type monthMetrics struct {
-	totalIncome float64
-	totalSpent  float64
-	netSavings  float64
+	totalIncome int
+	totalSpent  int
+	netSavings  int
 	savingsRate float64
 	byCategory  []model.CategorySpending
 }
@@ -71,9 +71,9 @@ func (s *summaryService) GenerateMonthlySummary(ctx context.Context, userID stri
 
 	return &model.TransactionSummary{
 		TotalIncome:        curMonthMetrics.totalIncome,
-		TotalSpent:         model.ValueAndChange{Value: curMonthMetrics.totalSpent, Change: changeInSpending},
-		NetSavings:         model.ValueAndChange{Value: curMonthMetrics.netSavings, Change: changeInNetSavings},
-		SavingsRate:        model.ValueAndChange{Value: curMonthMetrics.savingsRate, Change: changeInSavingsRate},
+		TotalSpent:         model.ValueAndChange[int]{Value: curMonthMetrics.totalSpent, Change: changeInSpending},
+		NetSavings:         model.ValueAndChange[int]{Value: curMonthMetrics.netSavings, Change: changeInNetSavings},
+		SavingsRate:        model.ValueAndChange[float64]{Value: curMonthMetrics.savingsRate, Change: changeInSavingsRate},
 		LastMonthSpent:     prevMonthMetrics.totalSpent,
 		TopCategory:        topCategory,
 		MonthlySummary:     monthlySummary,
@@ -96,14 +96,14 @@ func findTopSpendingCategory(categories []model.CategorySpending) *model.Categor
 }
 
 func calcMonthMetrics(txs []model.Transaction) monthMetrics {
-	var income, spent float64
-	catTotals := make(map[model.Category]float64)
+	var income, spent int
+	catTotals := make(map[model.Category]int)
 	for _, t := range txs {
 		if t.Category == model.CategoryIncome {
 			income += t.Amount
-		} else if isExpense(t) {
-			spent += -t.Amount
-			catTotals[t.Category] += -t.Amount
+		} else if t.Direction == model.Outflow {
+			spent += t.Amount
+			catTotals[t.Category] += t.Amount
 		}
 	}
 	net := income - spent
@@ -112,16 +112,15 @@ func calcMonthMetrics(txs []model.Transaction) monthMetrics {
 	for cat, amount := range catTotals {
 		byCategory = append(byCategory, model.CategorySpending{Category: cat, Amount: amount})
 	}
-	sortByAmountDesc(byCategory, func(c model.CategorySpending) float64 { return c.Amount })
 
 	if len(byCategory) > 5 {
 		byCategory = byCategory[:5]
 	}
 
 	return monthMetrics{
-		totalIncome: roundTo2Dp(income),
-		totalSpent:  roundTo2Dp(spent),
-		netSavings:  roundTo2Dp(net),
+		totalIncome: income,
+		totalSpent:  spent,
+		netSavings:  net,
 		savingsRate: roundTo2Dp(safeDivide(net, income) * 100),
 		byCategory:  byCategory,
 	}
@@ -133,7 +132,10 @@ func generateMonthlySummary(spendChange float64, hasPrevMonth bool, cur monthMet
 	}
 	suffix := fmt.Sprintf(
 		"Your biggest expense was %s at $%.2f, and you saved $%.2f (%.2f%% of income).",
-		cur.byCategory[0].Category, cur.byCategory[0].Amount, cur.netSavings, cur.savingsRate,
+		cur.byCategory[0].Category,
+		float64(cur.byCategory[0].Amount)/100,
+		float64(cur.netSavings)/100,
+		float64(cur.savingsRate)/100,
 	)
 	if !hasPrevMonth {
 		return suffix
@@ -146,16 +148,16 @@ func generateMonthlySummary(spendChange float64, hasPrevMonth bool, cur monthMet
 }
 
 func computeSpendingByDayOfWeek(txs []model.Transaction) []model.DateSpending {
-	totals := make(map[time.Weekday]float64)
+	totals := make(map[time.Weekday]int)
 	for _, t := range txs {
-		if !isExpense(t) {
+		if t.Direction == model.Inflow {
 			continue
 		}
 		date, err := time.Parse("2006-01-02", t.Date)
 		if err != nil {
 			continue
 		}
-		totals[date.Weekday()] += -t.Amount
+		totals[date.Weekday()] += t.Amount
 	}
 
 	days := []time.Weekday{
@@ -167,7 +169,7 @@ func computeSpendingByDayOfWeek(txs []model.Transaction) []model.DateSpending {
 	for i, day := range days {
 		result[i] = model.DateSpending{
 			Date:   day.String()[:3],
-			Amount: roundTo2Dp(totals[day]),
+			Amount: totals[day],
 		}
 	}
 
@@ -175,7 +177,7 @@ func computeSpendingByDayOfWeek(txs []model.Transaction) []model.DateSpending {
 }
 
 func computeBiggestSpendingChangeCategory(cur, prev []model.CategorySpending) []model.CategorySpendingChange {
-	prevMap := make(map[model.Category]float64, len(prev))
+	prevMap := make(map[model.Category]int, len(prev))
 	for _, c := range prev {
 		prevMap[c.Category] = c.Amount
 	}
@@ -185,13 +187,18 @@ func computeBiggestSpendingChangeCategory(cur, prev []model.CategorySpending) []
 		prevAmount := prevMap[c.Category]
 		result[i] = model.CategorySpendingChange{
 			Category:         c.Category,
-			Amount:           roundTo2Dp(c.Amount),
-			Change:           roundTo2Dp(c.Amount - prevAmount),
+			Amount:           c.Amount,
+			Change:           c.Amount - prevAmount,
 			PercentageChange: int(percentageChange(c.Amount, prevAmount)),
 		}
 	}
 
-	sortByAmountDesc(result, func(c model.CategorySpendingChange) float64 { return math.Abs(float64(c.PercentageChange)) })
+	sortByAmountDesc(result, func(c model.CategorySpendingChange) int {
+		if c.PercentageChange < 0 {
+			return -c.PercentageChange
+		}
+		return c.PercentageChange
+	})
 
 	if len(result) < 3 {
 		return result
@@ -213,9 +220,9 @@ func findTopSpendingMerchants(txs []model.Transaction) []model.Merchant {
 
 	result := make([]model.Merchant, 0, len(totals))
 	for name, spending := range totals {
-		result = append(result, model.Merchant{Name: name, Amount: roundTo2Dp(spending.Amount), Category: spending.Category})
+		result = append(result, model.Merchant{Name: name, Amount: spending.Amount, Category: spending.Category})
 	}
-	sortByAmountDesc(result, func(m model.Merchant) float64 { return m.Amount })
+	sortByAmountDesc(result, func(m model.Merchant) int { return m.Amount })
 	if len(result) > 5 {
 		result = result[:5]
 	}
@@ -241,7 +248,7 @@ func buildMonthlyTrend(to *time.Time, metrics map[string]monthMetrics) []model.D
 		month := t.Format(monthLayout)
 		trend[i] = model.DateSpending{
 			Date:   t.Format("Jan"),
-			Amount: roundTo2Dp(metrics[month].totalSpent),
+			Amount: metrics[month].totalSpent,
 		}
 	}
 	return trend
@@ -268,5 +275,5 @@ func groupTransactionsByMonth(txs []model.Transaction) map[string][]model.Transa
 }
 
 func isExpense(t model.Transaction) bool {
-	return t.Category != model.CategoryIncome && t.Amount < 0
+	return t.Category != model.CategoryIncome && t.Direction == model.Outflow
 }

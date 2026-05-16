@@ -2,17 +2,17 @@ package model
 
 type CategorySpending struct {
 	Category Category `json:"category"`
-	Amount   float64  `json:"amount"`
+	Amount   int      `json:"amount"`
 }
 
 type DateSpending struct {
-	Date   string  `json:"date"`
-	Amount float64 `json:"amount"`
+	Date   string `json:"date"`
+	Amount int    `json:"amount"`
 }
 
 type CategorySpendingChange struct {
 	Category         Category `json:"category"`
-	Amount           float64  `json:"amount"`
-	Change           float64  `json:"change"`
+	Amount           int      `json:"amount"`
+	Change           int      `json:"change"`
 	PercentageChange int      `json:"percentageChange"`
 }
