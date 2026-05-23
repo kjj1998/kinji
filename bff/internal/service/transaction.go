@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"log/slog"
 
 	"github.com/kohjunjie/kinji/bff/internal/model"
 	"github.com/kohjunjie/kinji/bff/internal/repository"
@@ -13,12 +14,7 @@ type TransactionService interface {
 		userId string,
 		month string,
 		year string,
-	) ([]model.Transaction, error)
-
-	GetTransactionsAvailabilities(
-		ctx context.Context,
-		userId string,
-	) ([]model.TransactionsAvailability, error)
+	) (model.Transactions, error)
 }
 
 type transactionService struct {
@@ -34,13 +30,14 @@ func (t *transactionService) GetMonthlyTransactions(
 	userId string,
 	month string,
 	year string,
-) ([]model.Transaction, error) {
-	return t.repo.List(ctx, userId, month, year)
-}
+) (model.Transactions, error) {
+	slog.DebugContext(
+		ctx,
+		"get monthly transactions for",
+		"userId", userId,
+		"month", month,
+		"year", year,
+	)
 
-func (t *transactionService) GetTransactionsAvailabilities(
-	ctx context.Context,
-	userId string,
-) ([]model.TransactionsAvailability, error) {
-	return nil, nil
+	return t.repo.GetMonthlyTransactions(ctx, userId, month, year)
 }

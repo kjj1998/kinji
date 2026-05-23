@@ -7,9 +7,22 @@ import (
 )
 
 type Repository interface {
-	List(ctx context.Context, userID string, month string, year string) ([]model.Transaction, error)
-	ListRange(ctx context.Context, userID, from, to string) ([]model.Transaction, error)
-	Create(ctx context.Context, tx model.Transaction) error
-	Update(ctx context.Context, tx model.Transaction) error
-	Delete(ctx context.Context, userID, id string) error
+	GetMonthlyTransactions(ctx context.Context, userId, month, year string) (model.Transactions, error)
+	GetMonthlyTopMerchants(ctx context.Context, userId, month, year string, limit int) ([]model.Merchant, error)
+	GetMonthlyTopCategories(ctx context.Context, userId, month, year string, limit int) ([]model.CategorySpending, error)
+	GetTotalIncomeTotalSpentAndNetSavings(
+		ctx context.Context,
+		userId, month, year string,
+	) (
+		model.ValueAndChange[int],
+		model.ValueAndChange[int],
+		model.ValueAndChange[int],
+		int,
+		error,
+	)
+	GetLastSixMonthsExpenses(ctx context.Context, userId, month, year string) (map[string]int, error)
+	GetCategorySpendingForLastTwoMonths(
+		ctx context.Context,
+		userId, month, year string,
+	) (map[model.Category]int, map[model.Category]int, error)
 }

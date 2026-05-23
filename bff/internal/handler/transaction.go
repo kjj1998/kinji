@@ -1,8 +1,6 @@
 package handler
 
 import (
-	"fmt"
-	"log/slog"
 	"net/http"
 
 	"github.com/kohjunjie/kinji/bff/internal/service"
@@ -17,35 +15,24 @@ func NewTransactionHandler(svc service.TransactionService) *TransactionHandler {
 }
 
 func (h *TransactionHandler) List(w http.ResponseWriter, r *http.Request) {
-	id, ok := requireUserID(w, r)
+	id, ok := requireUserId(w, r)
 	if !ok {
 		return
 	}
 
-	transactions, err := h.service.GetMonthlyTransactions(r.Context(), id, "", "")
+	q := r.URL.Query()
+	month, year, ok := parseMonthYear(w, q.Get("month"), q.Get("year"))
+	if !ok {
+		return
+	}
+
+	transactions, err := h.service.GetMonthlyTransactions(r.Context(), id, month, year)
 
 	if err != nil {
-		slog.Error(err.Error())
-		writeError(w, http.StatusInternalServerError, "failed to fetch transactions")
+		writeError(w, http.StatusInternalServerError, "failed to get monthly transactions")
 		return
 	}
 	writeJSON(w, http.StatusOK, transactions)
-}
-
-func (h *TransactionHandler) GetTransactionsAvailabilities(w http.ResponseWriter, r *http.Request) {
-	id, ok := requireUserID(w, r)
-	if !ok {
-		return
-	}
-
-	availabilities, err := h.service.GetTransactionsAvailabilities(r.Context(), id)
-
-	if err != nil {
-		writeError(w, http.StatusInternalServerError,
-			fmt.Sprintf("failed to retrieve transactions availabilites for id %s", id))
-		return
-	}
-	writeJSON(w, http.StatusOK, availabilities)
 }
 
 func (h *TransactionHandler) Create(w http.ResponseWriter, r *http.Request) {

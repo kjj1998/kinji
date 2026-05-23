@@ -37,3 +37,8 @@ type TransactionsAvailability struct {
 	Year   int   `json:"year"`
 	Months []int `json:"months"`
 }
+
+type Transactions struct {
+	Transactions   []Transaction              `json:"transactions"`
+	Availabilities []TransactionsAvailability `json:"availabilities"`
+}

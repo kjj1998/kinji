@@ -15,22 +15,18 @@ func NewSummaryHandler(svc service.SummaryService) *SummaryHandler {
 }
 
 func (h *SummaryHandler) Summary(w http.ResponseWriter, r *http.Request) {
-	id, ok := requireUserID(w, r)
+	id, ok := requireUserId(w, r)
 	if !ok {
 		return
 	}
 
 	q := r.URL.Query()
-	from, ok := parseDate(w, q.Get("from"), "from")
-	if !ok {
-		return
-	}
-	to, ok := parseDate(w, q.Get("to"), "to")
+	month, year, ok := parseMonthYear(w, q.Get("month"), q.Get("year"))
 	if !ok {
 		return
 	}
 
-	summary, err := h.service.GenerateMonthlySummary(r.Context(), id, from, to)
+	summary, err := h.service.GenerateMonthlySummary(r.Context(), id, month, year)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "failed to calculate monthly summary")
 		return

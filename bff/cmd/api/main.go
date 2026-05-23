@@ -10,7 +10,8 @@ import (
 	"time"
 
 	"github.com/kohjunjie/kinji/bff/internal/config"
-	"github.com/kohjunjie/kinji/bff/internal/repository/dynamo"
+	"github.com/kohjunjie/kinji/bff/internal/repository"
+	"github.com/kohjunjie/kinji/bff/internal/repository/sqlite"
 	"github.com/kohjunjie/kinji/bff/internal/server"
 )
 
@@ -20,13 +21,18 @@ func main() {
 
 	cfg := config.Load()
 
-	dynamoClient, err := dynamo.NewClient(cfg.DynamoEndpoint, cfg.DynamoRegion)
+	var repo repository.Repository
+
+	db, err := sqlite.NewClient(cfg.SQLitePath)
 	if err != nil {
-		slog.Error("failed to create dynamo client", "error", err)
+		slog.Error("failed to create sqlite client",
+			"error", err,
+			"path", cfg.SQLitePath)
 		os.Exit(1)
 	}
-	dynamoRepo := dynamo.NewRepository(dynamoClient, cfg.DynamoTable)
-	handler := server.New(dynamoRepo, cfg.CORSOrigin)
+	repo = sqlite.NewRepository(db)
+
+	handler := server.New(repo, cfg.CORSOrigin)
 
 	srv := &http.Server{
 		Addr:         ":" + cfg.Port,

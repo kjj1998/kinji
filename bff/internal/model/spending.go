@@ -10,6 +10,11 @@ type DateSpending struct {
 	Amount int    `json:"amount"`
 }
 
+type MonthlyExpense struct {
+	Month  string `json:"month"`
+	Amount int    `json:"amount"`
+}
+
 type CategorySpendingChange struct {
 	Category         Category `json:"category"`
 	Amount           int      `json:"amount"`
