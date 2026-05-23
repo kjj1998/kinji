@@ -9,9 +9,9 @@ export function useTransactions(userId: string) {
 	});
 }
 
-export function useSummary(userId: string, from?: string, to?: string) {
+export function useSummary(userId: string, month?: string, year?: string) {
 	return useQuery({
-		queryKey: ["summary", userId, from, to],
-		queryFn: () => fetchSummary(userId, from, to),
+		queryKey: ["summary", userId, month, year],
+		queryFn: () => fetchSummary(userId, month, year),
 	});
 }

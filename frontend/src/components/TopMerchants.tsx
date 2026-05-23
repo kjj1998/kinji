@@ -1,5 +1,7 @@
 import { Avatar, Card, Group, Stack, Text, Title } from "@mantine/core";
 
+import { formatCurrency } from "../utils";
+
 export interface MerchantItem {
 	name: string;
 	amount: number;
@@ -11,10 +13,7 @@ export interface TopMerchantsProps {
 	currency?: string;
 }
 
-export function TopMerchants({
-	merchants,
-	currency = "$",
-}: TopMerchantsProps) {
+export function TopMerchants({ merchants, currency = "$" }: TopMerchantsProps) {
 	const sorted = [...merchants].sort((a, b) => b.amount - a.amount);
 
 	return (
@@ -39,11 +38,7 @@ export function TopMerchants({
 							</div>
 						</Group>
 						<Text size="sm" fw={500}>
-							{currency}
-							{merchant.amount.toLocaleString("en-US", {
-								minimumFractionDigits: 2,
-								maximumFractionDigits: 2,
-							})}
+							{formatCurrency(merchant.amount / 100)}
 						</Text>
 					</Group>
 				))}

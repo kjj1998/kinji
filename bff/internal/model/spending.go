@@ -20,4 +20,5 @@ type CategorySpendingChange struct {
 	Amount           int      `json:"amount"`
 	Change           int      `json:"change"`
 	PercentageChange int      `json:"percentageChange"`
+	IsNew            bool     `json:"isNew"`
 }

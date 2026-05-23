@@ -1,4 +1,4 @@
-import { Card, Divider, Group, Stack, Text, Title } from "@mantine/core";
+import { Badge, Card, Divider, Group, Stack, Text, Title } from "@mantine/core";
 import type { CategorySpendingChange } from "../types";
 import { formatCurrency } from "../utils";
 
@@ -13,28 +13,44 @@ export function BiggestChanges({ changes }: BiggestChangesProps) {
 				Biggest Changes vs Last Month
 			</Title>
 			<Stack gap={0}>
-				{changes.map((item, index) => {
-					const isUp = item.change > 0;
-					return (
-						<div key={item.category}>
-							<Group justify="space-between" py={4} wrap="nowrap">
-								<Text size="sm" fw={500}>
-									{item.category}
-								</Text>
-								<Group gap="xs" wrap="nowrap">
-									<Text size="sm" c={isUp ? "red" : "green"} fw={500}>
-										{isUp ? "▲" : "▼"} {Math.abs(item.percentageChange)}%
+				{changes.length === 0 ? (
+					<Text size="sm" c="dimmed" ta="center" py="md">
+						No changes to show yet
+					</Text>
+				) : (
+					changes.map((item, index) => {
+						const isNew = item.isNew;
+						const isUp = item.change > 0;
+						const noChange = item.percentageChange === 0;
+						const color = noChange ? undefined : isUp ? "red" : "green";
+						return (
+							<div key={item.category}>
+								<Group justify="space-between" py={4} wrap="nowrap">
+									<Text size="sm" fw={500}>
+										{item.category}
 									</Text>
-									<Text size="sm" c={isUp ? "red" : "green"} fw={500}>
-										{isUp ? "+" : "-"}
-										{formatCurrency(Math.abs(item.change))}
-									</Text>
+									<Group gap="xs" wrap="nowrap">
+										{isNew ? (
+											<Badge size="sm" variant="light" color="gray">
+												New
+											</Badge>
+										) : (
+											<Text size="sm" c={color} fw={500}>
+												{noChange ? "" : isUp ? "▲" : "▼"}{" "}
+												{Math.abs(item.percentageChange)}%
+											</Text>
+										)}
+										<Text size="sm" c={isNew ? undefined : color} fw={500}>
+											{isNew || noChange ? "" : isUp ? "+" : "-"}
+											{formatCurrency(item.change / 100)}
+										</Text>
+									</Group>
 								</Group>
-							</Group>
-							{index < changes.length - 1 && <Divider />}
-						</div>
-					);
-				})}
+								{index < changes.length - 1 && <Divider />}
+							</div>
+						);
+					})
+				)}
 			</Stack>
 		</Card>
 	);

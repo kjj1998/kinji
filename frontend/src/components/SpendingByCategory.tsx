@@ -11,21 +11,24 @@ export interface SpendingByCategoryProps {
 export function SpendingByCategory({
 	spendingByCategory,
 }: SpendingByCategoryProps) {
-	const data = (spendingByCategory ?? []).map(
-		(c: CategorySpending, i: number) => ({
-			name: c.category,
-			amount: c.amount,
-			color: COLORS[i % COLORS.length],
-		}),
-	);
-	const total = data.reduce((sum, cat) => sum + cat.amount, 0);
+	const top5Categories = [...spendingByCategory]
+		.sort((a, b) => b.amount - a.amount)
+		.slice(0, 5);
+
+	const data = (top5Categories ?? []).map((c: CategorySpending, i: number) => ({
+		name: c.category,
+		amount: c.amount,
+		color: COLORS[i % COLORS.length],
+	}));
+
+	const total = top5Categories.reduce((sum, cat) => sum + cat.amount, 0);
 
 	return (
 		<Card withBorder radius="md" p="sm">
 			<Title order={5} mb="xs">
 				Spending by Category
 			</Title>
-			{data.length === 0 ? (
+			{spendingByCategory.length === 0 ? (
 				<Text ta="center">No data found</Text>
 			) : (
 				<Stack gap="xs">
@@ -34,7 +37,7 @@ export function SpendingByCategory({
 							<Group justify="space-between" mb={4}>
 								<Text size="sm">{cat.name}</Text>
 								<Text size="sm" fw={500}>
-									{formatCurrency(cat.amount)}
+									{formatCurrency(cat.amount / 100)}
 								</Text>
 							</Group>
 							<Box

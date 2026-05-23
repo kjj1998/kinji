@@ -34,7 +34,7 @@ export function SpendingBarChart({ title, data, height = 160 }: BarChartProps) {
 						}}
 					>
 						<Text size="xs" c="dimmed">
-							{formatCurrency(point.amount)}
+							{formatCurrency(point.amount / 100)}
 						</Text>
 						<Box
 							style={{

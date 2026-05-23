@@ -14,7 +14,7 @@ export function RecentTransactions({ transactions }: RecentTransactionsProps) {
 			</Title>
 			<Stack gap={0}>
 				{transactions.map((tx, index) => {
-					const isIncome = tx.amount > 0;
+					const isInflow = tx.direction === "INFLOW";
 					return (
 						<div key={`${tx.merchant}-${tx.date}`}>
 							<Group justify="space-between" py={4} wrap="nowrap">
@@ -29,11 +29,11 @@ export function RecentTransactions({ transactions }: RecentTransactionsProps) {
 								<Text
 									size="sm"
 									fw={500}
-									c={isIncome ? "green" : undefined}
+									c={isInflow ? "green" : undefined}
 									style={{ whiteSpace: "nowrap" }}
 								>
-									{isIncome ? "+" : ""}
-									{formatCurrency(Math.abs(tx.amount))}
+									{isInflow ? "+" : ""}
+									{formatCurrency(tx.amount / 100)}
 								</Text>
 							</Group>
 							{index < transactions.length - 1 && <Divider />}

@@ -15,11 +15,17 @@ export interface DateSpending {
 	amount: number;
 }
 
+export interface MonthSpending {
+	month: string;
+	amount: number;
+}
+
 export interface CategorySpendingChange {
 	category: string;
 	amount: number;
 	change: number;
 	percentageChange: number;
+	isNew: boolean;
 }
 
 export interface Merchant {
@@ -36,8 +42,8 @@ export interface Summary {
 	lastMonthSpent: number;
 	topCategory: CategorySpending;
 	monthlySummary: string;
-	spendingByCategory: CategorySpending[];
-	monthlyTrend: DateSpending[];
+	topCategories: CategorySpending[];
+	monthlyExpenses: MonthSpending[];
 	dailyTrend: DateSpending[];
 	biggestChanges: CategorySpendingChange[];
 	topMerchants: Merchant[];

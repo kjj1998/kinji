@@ -39,10 +39,13 @@ function formatSpendingBarChartData(
 }
 
 export function Overview({ userName }: OverviewProps) {
+	const now = new Date();
+	const month = String(now.getMonth() + 1).padStart(2, "0");
+	const year = String(now.getFullYear());
 	const { data: summary = {} as Summary, isLoading } = useSummary(
 		"james",
-		"2026-01-01",
-		"2026-04-30",
+		month,
+		year,
 	);
 
 	if (isLoading) {
@@ -50,7 +53,7 @@ export function Overview({ userName }: OverviewProps) {
 	}
 
 	const formattedMonthlyTrendData = formatSpendingBarChartData(
-		summary.monthlyTrend,
+		summary.monthlyExpenses,
 	);
 	const formattedDailyTrendData = formatSpendingBarChartData(
 		summary.dailyTrend,
@@ -61,7 +64,7 @@ export function Overview({ userName }: OverviewProps) {
 		<>
 			<Header text={`Good morning, ${userName}`} />
 			<SimpleGrid cols={4} mt="md">
-				<SummaryCard label="Total Income" value={summary.totalIncome} />
+				<SummaryCard label="Total Income" value={summary.totalIncome.value} />
 				<SummaryCard
 					label="Total Spent"
 					value={summary.totalSpent.value}
@@ -75,28 +78,18 @@ export function Overview({ userName }: OverviewProps) {
 				/>
 				<SummaryCard
 					label="Savings Rate"
-					value={summary.savingsRate.value}
+					value={summary.savingsRate}
 					format={"percent"}
-					delta={summary.savingsRate.change}
 					invertDelta
 				/>
 			</SimpleGrid>
 			<Box mt="xs">
-				<MonthSummary
-					currentSpend={summary.totalSpent.value}
-					lastMonthSpend={summary.lastMonthSpent}
-					topCategory={summary.topCategory.category}
-					topCategoryAmount={summary.topCategory.amount}
-					netSavings={summary.netSavings.value}
-					savingsRate={summary.savingsRate.value}
-				/>
+				<MonthSummary monthlySummary={summary.monthlySummary} />
 			</Box>
 			<Grid mt="xs">
 				<Grid.Col span={7}>
 					<Stack gap="xs">
-						<SpendingByCategory
-							spendingByCategory={summary.spendingByCategory}
-						/>
+						<SpendingByCategory spendingByCategory={summary.topCategories} />
 						<SpendingBarChart
 							title="Monthly Trend"
 							data={formattedMonthlyTrendData}

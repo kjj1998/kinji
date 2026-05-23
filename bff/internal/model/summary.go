@@ -25,7 +25,7 @@ type TransactionSummary struct {
 	LastMonthSpent     int                      `json:"lastMonthSpent"`
 	MonthlySummary     string                   `json:"monthlySummary"`
 	TopCategories      []CategorySpending       `json:"topCategories"`
-	MonthlyTrend       []MonthlyExpense         `json:"monthlyExpenses"`
+	MonthlyTrend       []DateSpending           `json:"monthlyExpenses"`
 	DailyTrend         []DateSpending           `json:"dailyTrend"`
 	BiggestChanges     []CategorySpendingChange `json:"biggestChanges"`
 	TopMerchants       []Merchant               `json:"topMerchants"`

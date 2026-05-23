@@ -17,17 +17,13 @@ const modules = [AllCommunityModule];
 
 function AmountCell(props: CustomCellRendererProps<Transaction, number>) {
 	const value = props.value ?? 0;
-	let displayValue = "";
+	const direction = props.data?.direction;
 
-	if (value > 0) {
-		displayValue = `+$${value.toFixed(2)}`;
-	} else if (value < 0) {
-		displayValue = `-$${Math.abs(value).toFixed(2)}`;
-	} else {
-		displayValue = "$0.00";
-	}
+	const isInflow = direction === "INFLOW";
+	const displayValue = `${isInflow ? "+" : ""}$${value.toFixed(2)}`;
+
 	return (
-		<span style={{ color: value > 0 ? "green" : "inherit" }}>
+		<span style={{ color: isInflow ? "green" : "inherit" }}>
 			{displayValue}
 		</span>
 	);
@@ -45,8 +41,39 @@ function SplitCell(props: CustomCellRendererProps<Transaction, number>) {
 
 export function Transactions() {
 	const queryClient = useQueryClient();
-	const { data: allTransactions = [] } = useTransactions("james");
+	const { data } = useTransactions("james");
+	const allTransactions = data?.transactions ?? [];
+	const availabilities = data?.availabilities ?? [];
 	const [showForm, setShowForm] = useState(false);
+	const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
+	const [selectedYear, setSelectedYear] = useState<string | null>(null);
+
+	const years = useMemo(
+		() =>
+			[...availabilities]
+				.sort((a, b) => b.year - a.year)
+				.map((a) => String(a.year)),
+		[availabilities],
+	);
+
+	const availableMonths = useMemo(() => {
+		if (!selectedYear) {
+			return [];
+		}
+		const entry = availabilities.find((a) => String(a.year) === selectedYear);
+		return entry
+			? entry.months.map((m) => String(m).padStart(2, "0"))
+			: [];
+	}, [availabilities, selectedYear]);
+
+	const formatTransactions = (transactions: Transaction[]) => {
+		return transactions.map((transaction) => ({
+			...transaction,
+			date: transaction.date.slice(0, 10),
+			amount: transaction.amount / 100,
+			split: transaction.split ? transaction.split / 100 : transaction.split,
+		}));
+	};
 
 	const colDefs = useMemo<ColDef<Transaction>[]>(
 		() => [
@@ -100,6 +127,8 @@ export function Transactions() {
 			<Header text={"Transactions"} />
 			<TransactionFilters
 				categories={categories}
+				years={years}
+				availableMonths={availableMonths}
 				showForm={showForm}
 				onTextInputChange={(e) =>
 					gridRef.current?.api.setGridOption(
@@ -116,6 +145,11 @@ export function Transactions() {
 								: null,
 						)
 						.then(() => gridRef.current?.api.onFilterChanged());
+				}}
+				onMonthSelectChange={setSelectedMonth}
+				onYearSelectChange={(value) => {
+					setSelectedYear(value);
+					setSelectedMonth(null);
 				}}
 				onShowFormClick={() => setShowForm((prev) => !prev)}
 			/>
@@ -138,7 +172,7 @@ export function Transactions() {
 					}}
 				>
 					<AgGridReact
-						rowData={allTransactions}
+						rowData={formatTransactions(allTransactions)}
 						columnDefs={colDefs}
 						pagination={true}
 						paginationPageSize={20}

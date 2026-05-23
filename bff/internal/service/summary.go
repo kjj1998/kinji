@@ -171,6 +171,7 @@ func computeCategoriesWithBiggestSpendingChange(cur, prev map[model.Category]int
 			Amount:           curAmount,
 			Change:           curAmount - prevAmount,
 			PercentageChange: int(percentageChange(curAmount, prevAmount)),
+			IsNew:            prevAmount == 0,
 		})
 	}
 
@@ -208,18 +209,18 @@ func recentTransactions(txs []model.Transaction, n int) []model.Transaction {
 	return copy[:n]
 }
 
-func buildMonthlyTrend(month, year string, monthlyExpenses map[string]int) ([]model.MonthlyExpense, error) {
+func buildMonthlyTrend(month, year string, monthlyExpenses map[string]int) ([]model.DateSpending, error) {
 	toMonth, err := time.Parse("2006-01", year+"-"+month)
 	if err != nil {
 		return nil, fmt.Errorf("parse %s-%s: %w", year, month, err)
 	}
 
-	trend := make([]model.MonthlyExpense, summaryMonths)
+	trend := make([]model.DateSpending, summaryMonths)
 	for i := range summaryMonths {
 		t := toMonth.AddDate(0, -(summaryMonths - 1 - i), 0)
 		month := t.Format(monthLayout)
-		trend[i] = model.MonthlyExpense{
-			Month:  t.Format("Jan"),
+		trend[i] = model.DateSpending{
+			Date:   t.Format("Jan"),
 			Amount: monthlyExpenses[month],
 		}
 	}

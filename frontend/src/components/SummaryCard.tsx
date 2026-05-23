@@ -29,9 +29,7 @@ export function SummaryCard({
 			: "green";
 
 	const formattedValue =
-		format === "currency"
-			? `${currency}${value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-			: `${value.toFixed(1)}%`;
+		format === "currency" ? `${currency}${value / 100}` : `${value}%`;
 
 	return (
 		<Card withBorder radius="md" p="md">
@@ -42,7 +40,7 @@ export function SummaryCard({
 				<Title order={2} c={color}>
 					{formattedValue}
 				</Title>
-				{delta != null && (
+				{delta != null && delta !== 0 && (
 					<Badge color={badgeColor}>
 						{isPositive ? "↑" : "↓"} {Math.abs(delta).toFixed(1)}%
 					</Badge>

@@ -1,4 +1,4 @@
-import type { Transaction } from "../types";
+import type { Transactions } from "../types";
 
 const BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -12,13 +12,17 @@ export async function fetchAllTransactions(userId: string) {
 
 	const result = await response.json();
 
-	return result as Transaction[];
+	return result as Transactions;
 }
 
-export async function fetchSummary(userId: string, from?: string, to?: string) {
+export async function fetchSummary(
+	userId: string,
+	month?: string,
+	year?: string,
+) {
 	const params = new URLSearchParams();
-	if (from) params.set("from", from);
-	if (to) params.set("to", to);
+	if (month) params.set("month", month);
+	if (year) params.set("year", year);
 
 	const query = params.size > 0 ? `?${params}` : "";
 	const url = `${BASE_URL}/api/v1/summary/${userId}${query}`;
