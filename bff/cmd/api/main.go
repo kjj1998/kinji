@@ -9,10 +9,10 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/kohjunjie/kinji/bff/internal/config"
-	"github.com/kohjunjie/kinji/bff/internal/repository"
-	"github.com/kohjunjie/kinji/bff/internal/repository/sqlite"
-	"github.com/kohjunjie/kinji/bff/internal/server"
+	"github.com/kjj1998/kinji/bff/internal/config"
+	"github.com/kjj1998/kinji/bff/internal/repository"
+	"github.com/kjj1998/kinji/bff/internal/repository/sqlite"
+	"github.com/kjj1998/kinji/bff/internal/server"
 )
 
 func main() {

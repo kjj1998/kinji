@@ -3,10 +3,10 @@ package server
 import (
 	"net/http"
 
-	"github.com/kohjunjie/kinji/bff/internal/handler"
-	"github.com/kohjunjie/kinji/bff/internal/middleware"
-	"github.com/kohjunjie/kinji/bff/internal/repository"
-	"github.com/kohjunjie/kinji/bff/internal/service"
+	"github.com/kjj1998/kinji/bff/internal/handler"
+	"github.com/kjj1998/kinji/bff/internal/middleware"
+	"github.com/kjj1998/kinji/bff/internal/repository"
+	"github.com/kjj1998/kinji/bff/internal/service"
 )
 
 func New(repo repository.Repository, corsOrigin string) http.Handler {

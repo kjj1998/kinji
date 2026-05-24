@@ -3,7 +3,7 @@ package handler
 import (
 	"net/http"
 
-	"github.com/kohjunjie/kinji/bff/internal/service"
+	"github.com/kjj1998/kinji/bff/internal/service"
 )
 
 type TransactionHandler struct {

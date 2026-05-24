@@ -1,4 +1,4 @@
-module github.com/kohjunjie/kinji/bff
+module github.com/kjj1998/kinji/bff
 
 go 1.25.0
 

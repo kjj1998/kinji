@@ -3,7 +3,7 @@ package repository
 import (
 	"context"
 
-	"github.com/kohjunjie/kinji/bff/internal/model"
+	"github.com/kjj1998/kinji/bff/internal/model"
 )
 
 type Repository interface {
