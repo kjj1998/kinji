@@ -1,4 +1,4 @@
-package model
+package models
 
 type Merchant struct {
 	Name     string   `json:"name"`

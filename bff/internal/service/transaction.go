@@ -1,12 +1,28 @@
 package service
 
 import (
+	"bytes"
 	"context"
+	"errors"
+	"fmt"
+	"io"
 	"log/slog"
+	"mime/multipart"
 
-	"github.com/kjj1998/kinji/bff/internal/model"
+	"github.com/kjj1998/kinji/bff/internal/claude"
+	"github.com/kjj1998/kinji/bff/internal/models"
 	"github.com/kjj1998/kinji/bff/internal/repository"
+	"github.com/pdfcpu/pdfcpu/pkg/api"
+	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu"
+	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/model"
 )
+
+// ClientError is a service error caused by bad client input → maps to HTTP 4xx.
+type ClientError struct {
+	Reason string
+}
+
+func (e *ClientError) Error() string { return e.Reason }
 
 type TransactionService interface {
 	GetMonthlyTransactions(
@@ -14,15 +30,22 @@ type TransactionService interface {
 		userId string,
 		month string,
 		year string,
-	) (model.Transactions, error)
+	) (models.Transactions, error)
+	ImportStatement(
+		ctx context.Context,
+		userId string,
+		statement multipart.File,
+		password string,
+	) ([]models.Transaction, error)
 }
 
 type transactionService struct {
-	repo repository.Repository
+	repo   repository.Repository
+	parser claude.Parser
 }
 
-func NewTransactionService(repo repository.Repository) TransactionService {
-	return &transactionService{repo: repo}
+func NewTransactionService(repo repository.Repository, parser claude.Parser) TransactionService {
+	return &transactionService{repo: repo, parser: parser}
 }
 
 func (t *transactionService) GetMonthlyTransactions(
@@ -30,7 +53,7 @@ func (t *transactionService) GetMonthlyTransactions(
 	userId string,
 	month string,
 	year string,
-) (model.Transactions, error) {
+) (models.Transactions, error) {
 	slog.DebugContext(
 		ctx,
 		"get monthly transactions for",
@@ -40,4 +63,47 @@ func (t *transactionService) GetMonthlyTransactions(
 	)
 
 	return t.repo.GetMonthlyTransactions(ctx, userId, month, year)
+}
+
+func (t *transactionService) ImportStatement(
+	ctx context.Context,
+	userId string,
+	statement multipart.File,
+	password string,
+) ([]models.Transaction, error) {
+	pdfBytes, err := io.ReadAll(statement)
+	if err != nil {
+		return []models.Transaction{}, fmt.Errorf("read pdf: %w", err)
+	}
+
+	slog.Info("authenticatiing pdf")
+	if password == "" {
+		if err := api.Validate(bytes.NewReader(pdfBytes), model.NewDefaultConfiguration()); err != nil {
+			if errors.Is(err, pdfcpu.ErrWrongPassword) {
+				return []models.Transaction{}, &ClientError{Reason: "pdf password required"}
+			}
+			return []models.Transaction{}, &ClientError{Reason: "invalid/corrupt pdf file"}
+		}
+	} else {
+		var out bytes.Buffer
+		conf := model.NewDefaultConfiguration()
+		conf.UserPW = password
+
+		if err := api.Decrypt(bytes.NewReader(pdfBytes), &out, conf); err != nil {
+			if errors.Is(err, pdfcpu.ErrWrongPassword) {
+				return []models.Transaction{}, &ClientError{Reason: "wrong pdf password given"}
+			}
+			return []models.Transaction{}, &ClientError{Reason: "invalid/corrupt pdf file"}
+		}
+
+		pdfBytes = out.Bytes()
+	}
+
+	txns, err := t.parser.ParseStatement(ctx, pdfBytes)
+	if err != nil {
+		slog.ErrorContext(ctx, "claude parse failed", "err", err)
+		return nil, fmt.Errorf("parse statement: %w", err)
+	}
+
+	return txns, nil
 }

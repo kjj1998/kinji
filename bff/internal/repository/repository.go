@@ -3,20 +3,20 @@ package repository
 import (
 	"context"
 
-	"github.com/kjj1998/kinji/bff/internal/model"
+	"github.com/kjj1998/kinji/bff/internal/models"
 )
 
 type Repository interface {
-	GetMonthlyTransactions(ctx context.Context, userId, month, year string) (model.Transactions, error)
-	GetMonthlyTopMerchants(ctx context.Context, userId, month, year string, limit int) ([]model.Merchant, error)
-	GetMonthlyTopCategories(ctx context.Context, userId, month, year string, limit int) ([]model.CategorySpending, error)
+	GetMonthlyTransactions(ctx context.Context, userId, month, year string) (models.Transactions, error)
+	GetMonthlyTopMerchants(ctx context.Context, userId, month, year string, limit int) ([]models.Merchant, error)
+	GetMonthlyTopCategories(ctx context.Context, userId, month, year string, limit int) ([]models.CategorySpending, error)
 	GetTotalIncomeTotalSpentAndNetSavings(
 		ctx context.Context,
 		userId, month, year string,
 	) (
-		model.ValueAndChange[int],
-		model.ValueAndChange[int],
-		model.ValueAndChange[int],
+		models.ValueAndChange[int],
+		models.ValueAndChange[int],
+		models.ValueAndChange[int],
 		int,
 		error,
 	)
@@ -24,5 +24,5 @@ type Repository interface {
 	GetCategorySpendingForLastTwoMonths(
 		ctx context.Context,
 		userId, month, year string,
-	) (map[model.Category]int, map[model.Category]int, error)
+	) (map[models.Category]int, map[models.Category]int, error)
 }

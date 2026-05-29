@@ -1,4 +1,4 @@
-package model
+package models
 
 type CategorySpending struct {
 	Category Category `json:"category"`

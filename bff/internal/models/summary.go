@@ -1,4 +1,4 @@
-package model
+package models
 
 type ValueAndChange[T int | float64] struct {
 	Value  T `json:"value"`

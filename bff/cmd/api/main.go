@@ -9,6 +9,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/kjj1998/kinji/bff/internal/claude"
 	"github.com/kjj1998/kinji/bff/internal/config"
 	"github.com/kjj1998/kinji/bff/internal/repository"
 	"github.com/kjj1998/kinji/bff/internal/repository/sqlite"
@@ -31,8 +32,9 @@ func main() {
 		os.Exit(1)
 	}
 	repo = sqlite.NewRepository(db)
+	parser := claude.NewParser(cfg.AnthropicModel)
 
-	handler := server.New(repo, cfg.CORSOrigin)
+	handler := server.New(repo, parser, cfg.CORSOrigin)
 
 	srv := &http.Server{
 		Addr:         ":" + cfg.Port,

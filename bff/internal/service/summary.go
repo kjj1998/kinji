@@ -8,7 +8,7 @@ import (
 	"slices"
 	"time"
 
-	"github.com/kjj1998/kinji/bff/internal/model"
+	"github.com/kjj1998/kinji/bff/internal/models"
 	"github.com/kjj1998/kinji/bff/internal/repository"
 )
 
@@ -18,7 +18,7 @@ const (
 )
 
 type SummaryService interface {
-	GenerateMonthlySummary(ctx context.Context, userId, month, year string) (*model.TransactionSummary, error)
+	GenerateMonthlySummary(ctx context.Context, userId, month, year string) (*models.TransactionSummary, error)
 }
 
 type summaryService struct {
@@ -33,7 +33,7 @@ func (s *summaryService) GenerateMonthlySummary(
 	ctx context.Context,
 	userId string,
 	month, year string,
-) (*model.TransactionSummary, error) {
+) (*models.TransactionSummary, error) {
 	curMonthTransactions, err := s.repo.GetMonthlyTransactions(ctx, userId, month, year)
 	if err != nil {
 		return nil, fmt.Errorf("get current month transactions for %s-%s, user id %s: %w", month, year, userId, err)
@@ -80,7 +80,7 @@ func (s *summaryService) GenerateMonthlySummary(
 
 	recentTransactions := recentTransactions(curMonthTransactions.Transactions, 5)
 
-	return &model.TransactionSummary{
+	return &models.TransactionSummary{
 		TotalIncome:        totalIncome,
 		TotalSpent:         totalSpent,
 		NetSavings:         netSavings,
@@ -98,7 +98,7 @@ func (s *summaryService) GenerateMonthlySummary(
 
 func generateMonthlySummary(
 	difference float64,
-	topTransaction *model.Transaction,
+	topTransaction *models.Transaction,
 	hasPrevMonth bool,
 	netSavings int,
 	savingsRate float64,
@@ -124,10 +124,10 @@ func generateMonthlySummary(
 	return fmt.Sprintf("You spent %.0f%% %s than last month. ", math.Abs(roundTo2Dp(difference/100)), direction) + suffix
 }
 
-func computeDailySpendingTrend(txs []model.Transaction) []model.DateSpending {
+func computeDailySpendingTrend(txs []models.Transaction) []models.DateSpending {
 	totals := make(map[time.Weekday]int)
 	for _, t := range txs {
-		if t.Direction == model.Inflow {
+		if t.Direction == models.Inflow {
 			continue
 		}
 		date, err := time.Parse("2006-01-02", t.Date)
@@ -142,9 +142,9 @@ func computeDailySpendingTrend(txs []model.Transaction) []model.DateSpending {
 		time.Thursday, time.Friday, time.Saturday, time.Sunday,
 	}
 
-	result := make([]model.DateSpending, len(days))
+	result := make([]models.DateSpending, len(days))
 	for i, day := range days {
-		result[i] = model.DateSpending{
+		result[i] = models.DateSpending{
 			Date:   day.String()[:3],
 			Amount: totals[day],
 		}
@@ -153,8 +153,8 @@ func computeDailySpendingTrend(txs []model.Transaction) []model.DateSpending {
 	return result
 }
 
-func computeCategoriesWithBiggestSpendingChange(cur, prev map[model.Category]int) []model.CategorySpendingChange {
-	categories := make(map[model.Category]struct{}, len(cur)+len(prev))
+func computeCategoriesWithBiggestSpendingChange(cur, prev map[models.Category]int) []models.CategorySpendingChange {
+	categories := make(map[models.Category]struct{}, len(cur)+len(prev))
 	for cat := range cur {
 		categories[cat] = struct{}{}
 	}
@@ -162,11 +162,11 @@ func computeCategoriesWithBiggestSpendingChange(cur, prev map[model.Category]int
 		categories[cat] = struct{}{}
 	}
 
-	result := make([]model.CategorySpendingChange, 0, len(categories))
+	result := make([]models.CategorySpendingChange, 0, len(categories))
 	for cat := range categories {
 		curAmount := cur[cat]
 		prevAmount := prev[cat]
-		result = append(result, model.CategorySpendingChange{
+		result = append(result, models.CategorySpendingChange{
 			Category:         cat,
 			Amount:           curAmount,
 			Change:           curAmount - prevAmount,
@@ -177,11 +177,11 @@ func computeCategoriesWithBiggestSpendingChange(cur, prev map[model.Category]int
 
 	if len(prev) == 0 {
 		// No baseline: "biggest movers" is undefined, fall back to biggest spenders.
-		sortByAmountDesc(result, func(c model.CategorySpendingChange) int {
+		sortByAmountDesc(result, func(c models.CategorySpendingChange) int {
 			return c.Amount
 		})
 	} else {
-		sortByAmountDesc(result, func(c model.CategorySpendingChange) int {
+		sortByAmountDesc(result, func(c models.CategorySpendingChange) int {
 			if c.PercentageChange < 0 {
 				return -c.PercentageChange
 			}
@@ -196,10 +196,10 @@ func computeCategoriesWithBiggestSpendingChange(cur, prev map[model.Category]int
 	return result[:3] // return top 3 categories with biggest spending changes
 }
 
-func recentTransactions(txs []model.Transaction, n int) []model.Transaction {
+func recentTransactions(txs []models.Transaction, n int) []models.Transaction {
 	copy := slices.Clone(txs)
 
-	slices.SortFunc(copy, func(a, b model.Transaction) int {
+	slices.SortFunc(copy, func(a, b models.Transaction) int {
 		return cmp.Compare(b.Date, a.Date)
 	})
 
@@ -209,17 +209,17 @@ func recentTransactions(txs []model.Transaction, n int) []model.Transaction {
 	return copy[:n]
 }
 
-func buildMonthlyTrend(month, year string, monthlyExpenses map[string]int) ([]model.DateSpending, error) {
+func buildMonthlyTrend(month, year string, monthlyExpenses map[string]int) ([]models.DateSpending, error) {
 	toMonth, err := time.Parse("2006-01", year+"-"+month)
 	if err != nil {
 		return nil, fmt.Errorf("parse %s-%s: %w", year, month, err)
 	}
 
-	trend := make([]model.DateSpending, summaryMonths)
+	trend := make([]models.DateSpending, summaryMonths)
 	for i := range summaryMonths {
 		t := toMonth.AddDate(0, -(summaryMonths - 1 - i), 0)
 		month := t.Format(monthLayout)
-		trend[i] = model.DateSpending{
+		trend[i] = models.DateSpending{
 			Date:   t.Format("Jan"),
 			Amount: monthlyExpenses[month],
 		}
@@ -227,14 +227,14 @@ func buildMonthlyTrend(month, year string, monthlyExpenses map[string]int) ([]mo
 	return trend, nil
 }
 
-func getTopTransaction(transactions []model.Transaction) *model.Transaction {
+func getTopTransaction(transactions []models.Transaction) *models.Transaction {
 	if len(transactions) == 0 {
 		return nil
 	}
 
-	var top *model.Transaction
+	var top *models.Transaction
 	for i, t := range transactions {
-		if t.Direction != model.Outflow {
+		if t.Direction != models.Outflow {
 			continue
 		}
 		if top == nil || t.Amount > top.Amount {

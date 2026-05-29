@@ -1,4 +1,4 @@
-package model
+package models
 
 type Category string
 
@@ -12,7 +12,18 @@ const (
 	CategorySubscriptions Category = "Subscriptions"
 	CategoryTransport     Category = "Transport"
 	CategoryUtilities     Category = "Utilities"
+	CategoryCredit        Category = "Credit"
 )
+
+func (c Category) IsValid() bool {
+	switch c {
+	case CategoryEntertainment, CategoryFood, CategoryGroceries,
+		CategoryHealth, CategoryIncome, CategoryShopping,
+		CategorySubscriptions, CategoryTransport, CategoryUtilities, CategoryCredit:
+		return true
+	}
+	return false
+}
 
 type Direction string
 
@@ -20,6 +31,10 @@ const (
 	Inflow  Direction = "INFLOW"
 	Outflow Direction = "OUTFLOW"
 )
+
+func (d Direction) IsValid() bool {
+	return d == Inflow || d == Outflow
+}
 
 type Transaction struct {
 	ID        string    `json:"id"`
