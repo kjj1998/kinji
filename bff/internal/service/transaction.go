@@ -9,6 +9,7 @@ import (
 	"log/slog"
 	"mime/multipart"
 
+	"github.com/google/uuid"
 	"github.com/kjj1998/kinji/bff/internal/claude"
 	"github.com/kjj1998/kinji/bff/internal/models"
 	"github.com/kjj1998/kinji/bff/internal/repository"
@@ -100,6 +101,10 @@ func (t *transactionService) ImportStatement(
 	}
 
 	txns, err := t.parser.ParseStatement(ctx, pdfBytes)
+	for i := range txns {
+		txns[i].UserID = userId
+		txns[i].ID = uuid.Must(uuid.NewV7()).String()
+	}
 	if err != nil {
 		slog.ErrorContext(ctx, "claude parse failed", "err", err)
 		return nil, fmt.Errorf("parse statement: %w", err)
