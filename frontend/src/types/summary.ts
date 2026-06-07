@@ -43,7 +43,7 @@ export interface Summary {
 	topCategory: CategorySpending;
 	monthlySummary: string;
 	topCategories: CategorySpending[];
-	monthlyExpenses: MonthSpending[];
+	monthlyExpenses: DateSpending[];
 	dailyTrend: DateSpending[];
 	biggestChanges: CategorySpendingChange[];
 	topMerchants: Merchant[];

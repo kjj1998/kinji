@@ -25,4 +25,9 @@ type Repository interface {
 		ctx context.Context,
 		userId, month, year string,
 	) (map[models.Category]int, map[models.Category]int, error)
+	SaveTransactions(
+		ctx context.Context,
+		userId string,
+		transactions []models.Transaction,
+	) error
 }

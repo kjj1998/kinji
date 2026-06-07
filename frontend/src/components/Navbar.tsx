@@ -18,7 +18,11 @@ import {
 } from "@tabler/icons-react";
 import classes from "./Navbar.module.css";
 
-export type NavbarItemKey = "overview" | "statements" | "transactions";
+export type NavbarItemKey =
+	| "overview"
+	| "statements"
+	| "transactions"
+	| "upload";
 
 export interface NavbarProps {
 	current: NavbarItemKey;
@@ -82,7 +86,7 @@ export function Navbar({
 			<Button
 				fullWidth
 				leftSection={<IconUpload size={16} />}
-				onClick={onUpload}
+				onClick={() => onNavigate("upload")}
 				className={classes.uploadButton}
 				mb="lg"
 			>

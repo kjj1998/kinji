@@ -130,7 +130,7 @@ func (d *Repository) GetMonthlyTopMerchants(
 	}
 	defer rows.Close()
 
-	var merchants []models.Merchant
+	var merchants []models.Merchant = []models.Merchant{}
 	for rows.Next() {
 		var m models.Merchant
 		if err := rows.Scan(&m.Name, &m.Amount, &m.Category); err != nil {
@@ -249,7 +249,7 @@ func (d *Repository) GetMonthlyTopCategories(
 	}
 	defer rows.Close()
 
-	var categorySpendings []models.CategorySpending
+	var categorySpendings []models.CategorySpending = []models.CategorySpending{}
 	for rows.Next() {
 		var cs models.CategorySpending
 		if err := rows.Scan(&cs.Category, &cs.Amount); err != nil {
@@ -297,4 +297,30 @@ func (d *Repository) GetLastSixMonthsExpenses(
 	}
 
 	return totalsByMonth, nil
+}
+
+func (d *Repository) SaveTransactions(
+	ctx context.Context,
+	userId string,
+	transactions []models.Transaction,
+) error {
+	tx, err := d.client.BeginTx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("db client error: %w", err)
+	}
+	defer tx.Rollback()
+
+	stmt, err := tx.PrepareContext(ctx, saveTransactions)
+	if err != nil {
+		return fmt.Errorf("db context error: %w", err)
+	}
+	defer stmt.Close()
+
+	for _, t := range transactions {
+		if _, err := stmt.ExecContext(ctx, t.ID, t.UserID, t.Date, t.Merchant,
+			t.Category, t.Amount, t.Direction, t.Notes, t.Split); err != nil {
+			return fmt.Errorf("db execution context error: %w", err)
+		}
+	}
+	return tx.Commit()
 }

@@ -68,3 +68,7 @@ const getTotalMonthlyExpensesWithinDateRange = `
 	WHERE user_id = ? AND date >= ? AND date <= ? AND direction = 'OUTFLOW'
 	GROUP BY month
 	ORDER BY month ASC`
+
+const saveTransactions = `
+	INSERT INTO transactions (id, user_id, date, merchant, category, amount, direction, notes, split)
+	VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`

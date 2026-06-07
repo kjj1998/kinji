@@ -197,6 +197,10 @@ func computeCategoriesWithBiggestSpendingChange(cur, prev map[models.Category]in
 }
 
 func recentTransactions(txs []models.Transaction, n int) []models.Transaction {
+	if txs == nil {
+		return []models.Transaction{}
+	}
+
 	copy := slices.Clone(txs)
 
 	slices.SortFunc(copy, func(a, b models.Transaction) int {

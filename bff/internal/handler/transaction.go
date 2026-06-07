@@ -1,10 +1,14 @@
 package handler
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
 	"log/slog"
 	"net/http"
+	"time"
 
+	"github.com/kjj1998/kinji/bff/internal/models"
 	"github.com/kjj1998/kinji/bff/internal/service"
 )
 
@@ -65,15 +69,65 @@ func (h *TransactionHandler) ImportStatement(w http.ResponseWriter, r *http.Requ
 
 	password := r.FormValue("password")
 
-	transactions, err := h.service.ImportStatement(r.Context(), userId, file, password)
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Connection", "keep-alive")
+	w.Header().Set("X-Accel-Buffering", "no")
+
+	rc := http.NewResponseController(w)
+	rc.SetWriteDeadline(time.Now().Add(60 * time.Second)) // extend deadline to give request longer time to complete
+
+	send := func(event, data string) {
+		fmt.Fprintf(w, "event: %s\ndata: %s\n\n", event, data)
+		rc.Flush()
+	}
+	sendError := func(msg string) { send("error", fmt.Sprintf(`{"message":%q}`, msg)) }
+
+	transactions, err := h.service.ImportStatement(r.Context(), userId, file, password,
+		func(stage string) { send("progress", fmt.Sprintf(`{"stage":%q}`, stage)) })
 	if err != nil {
 		var ce *service.ClientError
 		if errors.As(err, &ce) {
-			writeError(w, http.StatusBadRequest, ce.Error())
+			sendError(ce.Error())
 			return
 		}
-		writeError(w, http.StatusInternalServerError, "failed to import statement")
+		sendError("failed to import statement")
 		return
 	}
-	writeJSON(w, http.StatusOK, transactions)
+
+	data, err := json.Marshal(transactions)
+	if err != nil {
+		sendError("failed to encode result")
+		return
+	}
+	send("done", string(data))
+}
+
+// SaveTransactions saves transactions that has been reviewed and
+// approved by the user into the database.
+func (h *TransactionHandler) SaveTransactions(w http.ResponseWriter, r *http.Request) {
+	userId, ok := requireUserId(w, r)
+	if !ok {
+		return
+	}
+
+	var transactions []models.Transaction
+
+	r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
+
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields()
+	if err := decoder.Decode(&transactions); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+
+	savedTransactions, err := h.service.SaveTransactions(r.Context(), userId, transactions)
+	if err != nil {
+		slog.ErrorContext(r.Context(), "save transactions", "error", err)
+		writeError(w, http.StatusInternalServerError, "failed to save transactions")
+		return
+	}
+
+	writeJSON(w, http.StatusOK, savedTransactions)
 }

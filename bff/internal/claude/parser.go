@@ -90,7 +90,11 @@ Skip rows that are not actual transactions: opening balance ("BALANCE B/F"), clo
 Accuracy matters more than coverage. If a row is genuinely unreadable, omit it rather than guess. But extract every row you can read with confidence — the balances will be checked against running arithmetic, so amount, direction, and balance must be precise.`
 
 type Parser interface {
-	ParseStatement(ctx context.Context, pdf []byte) ([]models.Transaction, error)
+	ParseStatement(
+		ctx context.Context,
+		pdf []byte,
+		onProgress func(stage string),
+	) ([]models.Transaction, error)
 }
 
 type parser struct {
@@ -105,7 +109,11 @@ func NewParser(model string) Parser {
 	}
 }
 
-func (p *parser) ParseStatement(ctx context.Context, pdf []byte) ([]models.Transaction, error) {
+func (p *parser) ParseStatement(
+	ctx context.Context,
+	pdf []byte,
+	onProgress func(state string),
+) ([]models.Transaction, error) {
 	b64 := base64.StdEncoding.EncodeToString(pdf)
 	documentBlock := anthropic.NewDocumentBlock(anthropic.Base64PDFSourceParam{Data: b64})
 	textBlock := anthropic.NewTextBlock(extractionPrompt)
@@ -165,6 +173,7 @@ func (p *parser) ParseStatement(ctx context.Context, pdf []byte) ([]models.Trans
 		return nil, fmt.Errorf("model did not call record_transactions")
 	}
 
+	onProgress("checking_balances")
 	slog.Info("running balance guard checks")
 	for i := 1; i < len(input.Transactions); i++ {
 		prev, cur := input.Transactions[i-1].Balance, input.Transactions[i]

@@ -37,6 +37,12 @@ type TransactionService interface {
 		userId string,
 		statement multipart.File,
 		password string,
+		onProgress func(stage string),
+	) ([]models.Transaction, error)
+	SaveTransactions(
+		ctx context.Context,
+		userId string,
+		transactions []models.Transaction,
 	) ([]models.Transaction, error)
 }
 
@@ -71,13 +77,16 @@ func (t *transactionService) ImportStatement(
 	userId string,
 	statement multipart.File,
 	password string,
+	onProgress func(stage string),
 ) ([]models.Transaction, error) {
 	pdfBytes, err := io.ReadAll(statement)
 	if err != nil {
 		return []models.Transaction{}, fmt.Errorf("read pdf: %w", err)
 	}
+	onProgress("uploaded")
 
 	slog.Info("authenticatiing pdf")
+	onProgress("validating")
 	if password == "" {
 		if err := api.Validate(bytes.NewReader(pdfBytes), model.NewDefaultConfiguration()); err != nil {
 			if errors.Is(err, pdfcpu.ErrWrongPassword) {
@@ -100,7 +109,13 @@ func (t *transactionService) ImportStatement(
 		pdfBytes = out.Bytes()
 	}
 
-	txns, err := t.parser.ParseStatement(ctx, pdfBytes)
+	onProgress("parsing")
+
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+
+	txns, err := t.parser.ParseStatement(ctx, pdfBytes, onProgress)
 	for i := range txns {
 		txns[i].UserID = userId
 		txns[i].ID = uuid.Must(uuid.NewV7()).String()
@@ -111,4 +126,21 @@ func (t *transactionService) ImportStatement(
 	}
 
 	return txns, nil
+}
+
+func (t *transactionService) SaveTransactions(
+	ctx context.Context,
+	userId string,
+	transactions []models.Transaction,
+) ([]models.Transaction, error) {
+	slog.Info(fmt.Sprintf("saving %d transactions into the database", len(transactions)))
+
+	err := t.repo.SaveTransactions(ctx, userId, transactions)
+
+	if err != nil {
+		return []models.Transaction{}, fmt.Errorf("saving transactions: %w", err)
+	}
+
+	slog.Info(fmt.Sprintf("saved %d transactions into the database", len(transactions)))
+	return transactions, nil
 }

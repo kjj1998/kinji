@@ -10,7 +10,7 @@ import {
 	TopMerchants,
 } from "../components";
 import { useSummary } from "../hooks";
-import type { DateSpending, Summary } from "../types";
+import type { DateSpending } from "../types";
 
 interface OverviewProps {
 	userName: string;
@@ -42,15 +42,13 @@ export function Overview({ userName }: OverviewProps) {
 	const now = new Date();
 	const month = String(now.getMonth() + 1).padStart(2, "0");
 	const year = String(now.getFullYear());
-	const { data: summary = {} as Summary, isLoading } = useSummary(
-		"james",
-		month,
-		year,
-	);
+	const { data: summary, isLoading } = useSummary("james", month, year);
 
-	if (isLoading) {
+	if (isLoading || !summary) {
 		return <>Loading...</>;
 	}
+
+	console.log(summary);
 
 	const formattedMonthlyTrendData = formatSpendingBarChartData(
 		summary.monthlyExpenses,

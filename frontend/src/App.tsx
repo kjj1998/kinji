@@ -2,9 +2,16 @@ import "./App.css";
 import { AppShell } from "@mantine/core";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useCallback } from "react";
-import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
+import {
+	Navigate,
+	Route,
+	Routes,
+	useLocation,
+	useNavigate,
+} from "react-router-dom";
 import type { NavbarItemKey } from "./components/Navbar";
 import { Navbar } from "./components/Navbar";
+import { Upload } from "./pages";
 import { Overview } from "./pages/Overview";
 import { Transactions } from "./pages/Transactions";
 
@@ -20,13 +27,17 @@ const keyToPath: Record<NavbarItemKey, string> = {
 	overview: "/overview",
 	transactions: "/transactions",
 	statements: "/statements",
+	upload: "/upload",
 };
 
 function App() {
 	const navigate = useNavigate();
 	const location = useLocation();
 	const current = pathToKey[location.pathname] ?? "overview";
-	const handleNavigate = useCallback((key: NavbarItemKey) => navigate(keyToPath[key]), [navigate]);
+	const handleNavigate = useCallback(
+		(key: NavbarItemKey) => navigate(keyToPath[key]),
+		[navigate],
+	);
 
 	return (
 		<QueryClientProvider client={queryClient}>
@@ -52,6 +63,7 @@ function App() {
 						<Route path="/" element={<Navigate to="/overview" replace />} />
 						<Route path="/overview" element={<Overview userName="James" />} />
 						<Route path="/transactions" element={<Transactions />} />
+						<Route path="/upload" element={<Upload userId="james" />} />
 					</Routes>
 				</AppShell.Main>
 			</AppShell>

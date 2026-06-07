@@ -21,6 +21,7 @@ func New(repo repository.Repository, parser claude.Parser, corsOrigin string) ht
 
 	mux.HandleFunc("GET /health", handler.Health)
 	mux.HandleFunc("GET /api/v1/transactions/{id}", txHandler.GetMonthlyTransactions)
+	mux.HandleFunc("POST /api/v1/transactions/{id}", txHandler.SaveTransactions)
 	mux.HandleFunc("GET /api/v1/summary/{id}", summaryHandler.Summary)
 	mux.HandleFunc("POST /api/v1/transactions/{id}/import", txHandler.ImportStatement)
 
