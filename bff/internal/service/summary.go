@@ -8,6 +8,7 @@ import (
 	"slices"
 	"time"
 
+	"github.com/kjj1998/kinji/bff/internal/dto"
 	"github.com/kjj1998/kinji/bff/internal/models"
 	"github.com/kjj1998/kinji/bff/internal/repository"
 )
@@ -18,7 +19,7 @@ const (
 )
 
 type SummaryService interface {
-	GenerateMonthlySummary(ctx context.Context, userId, month, year string) (*models.TransactionSummary, error)
+	GenerateMonthlySummary(ctx context.Context, userId, month, year string) (*dto.TransactionSummary, error)
 }
 
 type summaryService struct {
@@ -33,7 +34,7 @@ func (s *summaryService) GenerateMonthlySummary(
 	ctx context.Context,
 	userId string,
 	month, year string,
-) (*models.TransactionSummary, error) {
+) (*dto.TransactionSummary, error) {
 	curMonthTransactions, err := s.repo.GetMonthlyTransactions(ctx, userId, month, year)
 	if err != nil {
 		return nil, fmt.Errorf("get current month transactions for %s-%s, user id %s: %w", month, year, userId, err)
@@ -65,11 +66,11 @@ func (s *summaryService) GenerateMonthlySummary(
 	}
 
 	changeInSpending := totalSpent.Value - lastMonthSpent
-	topTransaction := getTopTransaction(curMonthTransactions.Transactions)
+	topTransaction := getTopTransaction(curMonthTransactions)
 	monthlySummary := generateMonthlySummary(
 		float64(changeInSpending), topTransaction, lastMonthSpent > 0, netSavings.Value, savingsRate)
 
-	dailySpendngTrend := computeDailySpendingTrend(curMonthTransactions.Transactions)
+	dailySpendngTrend := computeDailySpendingTrend(curMonthTransactions)
 
 	curCategorySpending, prevCategorySpending, err := s.repo.GetCategorySpendingForLastTwoMonths(ctx, userId, month, year)
 	if err != nil {
@@ -78,9 +79,9 @@ func (s *summaryService) GenerateMonthlySummary(
 	categorySpendingChanges := computeCategoriesWithBiggestSpendingChange(
 		curCategorySpending, prevCategorySpending)
 
-	recentTransactions := recentTransactions(curMonthTransactions.Transactions, 5)
+	recentTransactions := recentTransactions(curMonthTransactions, 5)
 
-	return &models.TransactionSummary{
+	return &dto.TransactionSummary{
 		TotalIncome:        totalIncome,
 		TotalSpent:         totalSpent,
 		NetSavings:         netSavings,
@@ -124,7 +125,7 @@ func generateMonthlySummary(
 	return fmt.Sprintf("You spent %.0f%% %s than last month. ", math.Abs(roundTo2Dp(difference/100)), direction) + suffix
 }
 
-func computeDailySpendingTrend(txs []models.Transaction) []models.DateSpending {
+func computeDailySpendingTrend(txs []models.Transaction) []dto.DateSpending {
 	totals := make(map[time.Weekday]int)
 	for _, t := range txs {
 		if t.Direction == models.Inflow {
@@ -142,9 +143,9 @@ func computeDailySpendingTrend(txs []models.Transaction) []models.DateSpending {
 		time.Thursday, time.Friday, time.Saturday, time.Sunday,
 	}
 
-	result := make([]models.DateSpending, len(days))
+	result := make([]dto.DateSpending, len(days))
 	for i, day := range days {
-		result[i] = models.DateSpending{
+		result[i] = dto.DateSpending{
 			Date:   day.String()[:3],
 			Amount: totals[day],
 		}
@@ -153,7 +154,7 @@ func computeDailySpendingTrend(txs []models.Transaction) []models.DateSpending {
 	return result
 }
 
-func computeCategoriesWithBiggestSpendingChange(cur, prev map[models.Category]int) []models.CategorySpendingChange {
+func computeCategoriesWithBiggestSpendingChange(cur, prev map[models.Category]int) []dto.CategorySpendingChange {
 	categories := make(map[models.Category]struct{}, len(cur)+len(prev))
 	for cat := range cur {
 		categories[cat] = struct{}{}
@@ -162,11 +163,11 @@ func computeCategoriesWithBiggestSpendingChange(cur, prev map[models.Category]in
 		categories[cat] = struct{}{}
 	}
 
-	result := make([]models.CategorySpendingChange, 0, len(categories))
+	result := make([]dto.CategorySpendingChange, 0, len(categories))
 	for cat := range categories {
 		curAmount := cur[cat]
 		prevAmount := prev[cat]
-		result = append(result, models.CategorySpendingChange{
+		result = append(result, dto.CategorySpendingChange{
 			Category:         cat,
 			Amount:           curAmount,
 			Change:           curAmount - prevAmount,
@@ -177,11 +178,11 @@ func computeCategoriesWithBiggestSpendingChange(cur, prev map[models.Category]in
 
 	if len(prev) == 0 {
 		// No baseline: "biggest movers" is undefined, fall back to biggest spenders.
-		sortByAmountDesc(result, func(c models.CategorySpendingChange) int {
+		sortByAmountDesc(result, func(c dto.CategorySpendingChange) int {
 			return c.Amount
 		})
 	} else {
-		sortByAmountDesc(result, func(c models.CategorySpendingChange) int {
+		sortByAmountDesc(result, func(c dto.CategorySpendingChange) int {
 			if c.PercentageChange < 0 {
 				return -c.PercentageChange
 			}
@@ -213,17 +214,17 @@ func recentTransactions(txs []models.Transaction, n int) []models.Transaction {
 	return copy[:n]
 }
 
-func buildMonthlyTrend(month, year string, monthlyExpenses map[string]int) ([]models.DateSpending, error) {
+func buildMonthlyTrend(month, year string, monthlyExpenses map[string]int) ([]dto.DateSpending, error) {
 	toMonth, err := time.Parse("2006-01", year+"-"+month)
 	if err != nil {
 		return nil, fmt.Errorf("parse %s-%s: %w", year, month, err)
 	}
 
-	trend := make([]models.DateSpending, summaryMonths)
+	trend := make([]dto.DateSpending, summaryMonths)
 	for i := range summaryMonths {
 		t := toMonth.AddDate(0, -(summaryMonths - 1 - i), 0)
 		month := t.Format(monthLayout)
-		trend[i] = models.DateSpending{
+		trend[i] = dto.DateSpending{
 			Date:   t.Format("Jan"),
 			Amount: monthlyExpenses[month],
 		}

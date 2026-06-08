@@ -3,20 +3,21 @@ package repository
 import (
 	"context"
 
+	"github.com/kjj1998/kinji/bff/internal/dto"
 	"github.com/kjj1998/kinji/bff/internal/models"
 )
 
 type Repository interface {
-	GetMonthlyTransactions(ctx context.Context, userId, month, year string) (models.Transactions, error)
-	GetMonthlyTopMerchants(ctx context.Context, userId, month, year string, limit int) ([]models.Merchant, error)
-	GetMonthlyTopCategories(ctx context.Context, userId, month, year string, limit int) ([]models.CategorySpending, error)
+	GetMonthlyTransactions(ctx context.Context, userId, month, year string) ([]models.Transaction, error)
+	GetMonthlyTopMerchants(ctx context.Context, userId, month, year string, limit int) ([]dto.Merchant, error)
+	GetMonthlyTopCategories(ctx context.Context, userId, month, year string, limit int) ([]dto.CategorySpending, error)
 	GetTotalIncomeTotalSpentAndNetSavings(
 		ctx context.Context,
 		userId, month, year string,
 	) (
-		models.ValueAndChange[int],
-		models.ValueAndChange[int],
-		models.ValueAndChange[int],
+		dto.ValueAndChange[int],
+		dto.ValueAndChange[int],
+		dto.ValueAndChange[int],
 		int,
 		error,
 	)
@@ -30,4 +31,5 @@ type Repository interface {
 		userId string,
 		transactions []models.Transaction,
 	) error
+	GetTransactionPeriods(ctx context.Context, userId string) ([]models.Period, error)
 }

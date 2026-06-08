@@ -7,10 +7,10 @@ import {
 	AgGridReact,
 	type CustomCellRendererProps,
 } from "ag-grid-react";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AddTransactionForm, Header, TransactionFilters } from "../components";
 import { categories } from "../data";
-import { useTransactions } from "../hooks";
+import { usePeriods, useTransactions } from "../hooks";
 import type { Transaction } from "../types";
 
 const modules = [AllCommunityModule];
@@ -41,30 +41,54 @@ function SplitCell(props: CustomCellRendererProps<Transaction, number>) {
 
 export function Transactions() {
 	const queryClient = useQueryClient();
-	const { data } = useTransactions("james");
-	const allTransactions = data?.transactions ?? [];
-	const availabilities = data?.availabilities ?? [];
+	const { data: periodData } = usePeriods("james");
+	const periods = periodData ?? [];
 	const [showForm, setShowForm] = useState(false);
 	const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
 	const [selectedYear, setSelectedYear] = useState<string | null>(null);
 
+	const { data } = useTransactions(
+		"james",
+		selectedMonth ?? undefined,
+		selectedYear ?? undefined,
+	);
+	const allTransactions = data ?? [];
+
 	const years = useMemo(
 		() =>
-			[...availabilities]
+			[...periods]
 				.sort((a, b) => b.year - a.year)
 				.map((a) => String(a.year)),
-		[availabilities],
+		[periods],
 	);
 
 	const availableMonths = useMemo(() => {
 		if (!selectedYear) {
 			return [];
 		}
-		const entry = availabilities.find((a) => String(a.year) === selectedYear);
-		return entry
-			? entry.months.map((m) => String(m).padStart(2, "0"))
-			: [];
-	}, [availabilities, selectedYear]);
+		const entry = periods.find((a) => String(a.year) === selectedYear);
+		return entry ? entry.months.map((m) => String(m).padStart(2, "0")) : [];
+	}, [periods, selectedYear]);
+
+	// the most recent year and its most recent month with data
+	const latest = useMemo(() => {
+		if (periods.length === 0) {
+			return null;
+		}
+		const latestPeriod = [...periods].sort((a, b) => b.year - a.year)[0];
+		return {
+			year: String(latestPeriod.year),
+			month: String(Math.max(...latestPeriod.months)).padStart(2, "0"),
+		};
+	}, [periods]);
+
+	// default the dropdowns to the latest available period once it loads
+	useEffect(() => {
+		if (latest && selectedYear === null) {
+			setSelectedYear(latest.year);
+			setSelectedMonth(latest.month);
+		}
+	}, [latest, selectedYear]);
 
 	const formatTransactions = (transactions: Transaction[]) => {
 		return transactions.map((transaction) => ({
@@ -129,6 +153,8 @@ export function Transactions() {
 				categories={categories}
 				years={years}
 				availableMonths={availableMonths}
+				selectedMonth={selectedMonth}
+				selectedYear={selectedYear}
 				showForm={showForm}
 				onTextInputChange={(e) =>
 					gridRef.current?.api.setGridOption(
@@ -149,18 +175,27 @@ export function Transactions() {
 				onMonthSelectChange={setSelectedMonth}
 				onYearSelectChange={(value) => {
 					setSelectedYear(value);
-					setSelectedMonth(null);
+					if (!value) {
+						setSelectedMonth(null);
+						return;
+					}
+					const entry = periods.find((p) => String(p.year) === value);
+					setSelectedMonth(
+						entry
+							? String(Math.max(...entry.months)).padStart(2, "0")
+							: null,
+					);
 				}}
 				onShowFormClick={() => setShowForm((prev) => !prev)}
 			/>
 			{showForm && (
 				<AddTransactionForm
 					categories={categories}
-					onAdd={(newTx) => {
-						queryClient.setQueryData(
-							["transactions", "james"],
-							(prev: Transaction[]) => [newTx, ...prev],
-						);
+					onAdd={() => {
+						queryClient.invalidateQueries({
+							queryKey: ["transactions", "james"],
+						});
+						queryClient.invalidateQueries({ queryKey: ["periods", "james"] });
 						setShowForm(false);
 					}}
 				/>

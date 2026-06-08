@@ -1,4 +1,6 @@
-package models
+package dto
+
+import "github.com/kjj1998/kinji/bff/internal/models"
 
 type ValueAndChange[T int | float64] struct {
 	Value  T `json:"value"`
@@ -17,6 +19,30 @@ func NewValueAndChange[T int | float64](values []T) ValueAndChange[T] {
 	return v
 }
 
+type Merchant struct {
+	Name     string          `json:"name"`
+	Amount   int             `json:"amount"`
+	Category models.Category `json:"category"`
+}
+
+type CategorySpending struct {
+	Category models.Category `json:"category"`
+	Amount   int             `json:"amount"`
+}
+
+type DateSpending struct {
+	Date   string `json:"date"`
+	Amount int    `json:"amount"`
+}
+
+type CategorySpendingChange struct {
+	Category         models.Category `json:"category"`
+	Amount           int             `json:"amount"`
+	Change           int             `json:"change"`
+	PercentageChange int             `json:"percentageChange"`
+	IsNew            bool            `json:"isNew"`
+}
+
 type TransactionSummary struct {
 	TotalIncome        ValueAndChange[int]      `json:"totalIncome"`
 	TotalSpent         ValueAndChange[int]      `json:"totalSpent"`
@@ -29,5 +55,5 @@ type TransactionSummary struct {
 	DailyTrend         []DateSpending           `json:"dailyTrend"`
 	BiggestChanges     []CategorySpendingChange `json:"biggestChanges"`
 	TopMerchants       []Merchant               `json:"topMerchants"`
-	RecentTransactions []Transaction            `json:"recentTransactions"`
+	RecentTransactions []models.Transaction     `json:"recentTransactions"`
 }

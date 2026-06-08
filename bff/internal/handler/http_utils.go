@@ -34,11 +34,7 @@ func requireUserId(w http.ResponseWriter, r *http.Request) (string, bool) {
 // parseMonthYear validates the month and year query params, returning them
 // normalized as MM ("01"-"12") and YYYY. If either param is empty, it
 // defaults to the current month and year.
-func parseMonthYear(
-	w http.ResponseWriter,
-	monthVal,
-	yearVal string,
-) (month string, year string, ok bool) {
+func parseMonthYear(w http.ResponseWriter, monthVal, yearVal string) (month, year string, ok bool) {
 	if monthVal == "" || yearVal == "" {
 		now := time.Now()
 		return now.Format("01"), now.Format("2006"), true
@@ -58,5 +54,5 @@ func parseMonthYear(
 		return "", "", false
 	}
 
-	return fmt.Sprintf("%02d", m), strconv.Itoa(y), true
+	return fmt.Sprintf("%02d", m), fmt.Sprintf("%d", y), true
 }

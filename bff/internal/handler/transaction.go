@@ -131,3 +131,20 @@ func (h *TransactionHandler) SaveTransactions(w http.ResponseWriter, r *http.Req
 
 	writeJSON(w, http.StatusOK, savedTransactions)
 }
+
+// GetPeriods retrieves the years and months where transaction data is available
+func (h *TransactionHandler) GetPeriods(w http.ResponseWriter, r *http.Request) {
+	userId, ok := requireUserId(w, r)
+	if !ok {
+		return
+	}
+
+	periods, err := h.service.GetPeriods(r.Context(), userId)
+	if err != nil {
+		slog.ErrorContext(r.Context(), "get periods", "error", err)
+		writeError(w, http.StatusInternalServerError, "failed to get periods")
+		return
+	}
+
+	writeJSON(w, http.StatusOK, periods)
+}

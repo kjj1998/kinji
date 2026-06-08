@@ -18,32 +18,12 @@ import (
 	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/model"
 )
 
-// ClientError is a service error caused by bad client input → maps to HTTP 4xx.
-type ClientError struct {
-	Reason string
-}
-
-func (e *ClientError) Error() string { return e.Reason }
-
+// TransactionService interface
 type TransactionService interface {
-	GetMonthlyTransactions(
-		ctx context.Context,
-		userId string,
-		month string,
-		year string,
-	) (models.Transactions, error)
-	ImportStatement(
-		ctx context.Context,
-		userId string,
-		statement multipart.File,
-		password string,
-		onProgress func(stage string),
-	) ([]models.Transaction, error)
-	SaveTransactions(
-		ctx context.Context,
-		userId string,
-		transactions []models.Transaction,
-	) ([]models.Transaction, error)
+	GetMonthlyTransactions(ctx context.Context, userId, month, year string) ([]models.Transaction, error)
+	ImportStatement(ctx context.Context, userId string, statement multipart.File, password string, onProgress func(stage string)) ([]models.Transaction, error)
+	SaveTransactions(ctx context.Context, userId string, transactions []models.Transaction) ([]models.Transaction, error)
+	GetPeriods(ctx context.Context, userId string) ([]models.Period, error)
 }
 
 type transactionService struct {
@@ -55,12 +35,7 @@ func NewTransactionService(repo repository.Repository, parser claude.Parser) Tra
 	return &transactionService{repo: repo, parser: parser}
 }
 
-func (t *transactionService) GetMonthlyTransactions(
-	ctx context.Context,
-	userId string,
-	month string,
-	year string,
-) (models.Transactions, error) {
+func (t *transactionService) GetMonthlyTransactions(ctx context.Context, userId, month, year string) ([]models.Transaction, error) {
 	slog.DebugContext(
 		ctx,
 		"get monthly transactions for",
@@ -143,4 +118,16 @@ func (t *transactionService) SaveTransactions(
 
 	slog.Info(fmt.Sprintf("saved %d transactions into the database", len(transactions)))
 	return transactions, nil
+}
+
+func (t *transactionService) GetPeriods(ctx context.Context, userId string) ([]models.Period, error) {
+	slog.InfoContext(ctx, "getting transaction periods for userId", "userId", userId)
+
+	periods, err := t.repo.GetTransactionPeriods(ctx, userId)
+
+	if err != nil {
+		return periods, err
+	}
+
+	return periods, nil
 }

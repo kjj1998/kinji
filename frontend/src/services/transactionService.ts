@@ -1,9 +1,24 @@
-import type { Stage, Transaction, Transactions } from "../types";
+import type { Period, Stage, Transaction } from "../types";
+
+interface ImportHandlers {
+	onProgress: (stage: Stage) => void;
+	onDone: (transactions: Transaction[]) => void;
+	onError: (message: string) => void;
+}
 
 const BASE_URL = import.meta.env.VITE_API_URL;
 
-export async function fetchAllTransactions(userId: string) {
-	const url = `${BASE_URL}/api/v1/transactions/${userId}`;
+export async function fetchAllTransactions(
+	userId: string,
+	month?: string,
+	year?: string,
+) {
+	const params = new URLSearchParams();
+	if (month) params.set("month", month);
+	if (year) params.set("year", year);
+
+	const query = params.size > 0 ? `?${params}` : "";
+	const url = `${BASE_URL}/api/v1/transactions/${userId}${query}`;
 
 	const response = await fetch(url);
 	if (!response.ok) {
@@ -12,7 +27,7 @@ export async function fetchAllTransactions(userId: string) {
 
 	const result = await response.json();
 
-	return result as Transactions;
+	return result as Transaction[];
 }
 
 export async function fetchSummary(
@@ -51,12 +66,6 @@ export async function saveTransactions(
 	}
 
 	return response.json();
-}
-
-interface ImportHandlers {
-	onProgress: (stage: Stage) => void;
-	onDone: (transactions: Transaction[]) => void;
-	onError: (message: string) => void;
 }
 
 export async function importStatement(
@@ -117,4 +126,16 @@ export async function importStatement(
 			}
 		}
 	}
+}
+
+export async function fetchPeriods(userId: string) {
+	const url = `${BASE_URL}/api/v1/transactions/${userId}/periods`;
+	const response = await fetch(url);
+	if (!response.ok) {
+		throw new Error(`Response status: ${response.status}`);
+	}
+
+	const result = await response.json();
+
+	return result as Period[];
 }

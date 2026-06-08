@@ -25,14 +25,9 @@ export interface Transaction {
 	split: number | null;
 }
 
-export interface TransactionsAvailability {
+export interface Period {
 	year: number;
 	months: number[];
-}
-
-export interface Transactions {
-	transactions: Transaction[];
-	availabilities: TransactionsAvailability[];
 }
 
 export type Stage = "uploaded" | "validating" | "parsing" | "checking_balances";

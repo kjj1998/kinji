@@ -19,6 +19,8 @@ export interface TransactionFiltersProps {
 	categories: string[];
 	years: string[];
 	availableMonths: string[];
+	selectedMonth: string | null;
+	selectedYear: string | null;
 	showForm: boolean;
 	onTextInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 	onCategorySelectChange: (value: string | null) => void;
@@ -31,6 +33,8 @@ export function TransactionFilters({
 	categories,
 	years,
 	availableMonths,
+	selectedMonth,
+	selectedYear,
 	showForm,
 	onTextInputChange,
 	onCategorySelectChange,
@@ -64,6 +68,7 @@ export function TransactionFilters({
 					clearable
 					style={{ width: 140 }}
 					data={monthOptions}
+					value={selectedMonth}
 					onChange={onMonthSelectChange}
 				/>
 				<Select
@@ -71,6 +76,7 @@ export function TransactionFilters({
 					clearable
 					style={{ width: 120 }}
 					data={years}
+					value={selectedYear}
 					onChange={onYearSelectChange}
 				/>
 			</Group>

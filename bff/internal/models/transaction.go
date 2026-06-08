@@ -48,12 +48,7 @@ type Transaction struct {
 	Split     int       `json:"split,omitempty"`
 }
 
-type TransactionsAvailability struct {
+type Period struct {
 	Year   int   `json:"year"`
 	Months []int `json:"months"`
-}
-
-type Transactions struct {
-	Transactions   []Transaction              `json:"transactions"`
-	Availabilities []TransactionsAvailability `json:"availabilities"`
 }
