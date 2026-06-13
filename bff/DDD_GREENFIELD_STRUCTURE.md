@@ -1,3 +1,8 @@
+> **Historical record.** The codebase has since been flattened from this onion
+> layout to a conventional **layered** layout. The sections below describe the
+> *prior* design intent. For the current structure see the "Update (layered
+> restructure)" note at the bottom and [LAYERED_PLAN.md](LAYERED_PLAN.md).
+
 # Greenfield BFF Structure — DDD with Onion Architecture
 
 ## Context
@@ -128,3 +133,27 @@ already enforced; you'd split along the existing service boundaries.
 - **E2E smoke:** run `go run ./cmd/api`, then exercise
   `GET /api/v1/transactions/{id}`, `GET /api/v1/summary/{id}`,
   `POST /api/v1/transactions/{id}`, and `POST /.../import` (SSE).
+
+## Update (layered restructure)
+
+The onion/adapter layout above was flattened to a conventional layered layout
+for a simpler mental model (implemented per [LAYERED_PLAN.md](LAYERED_PLAN.md)).
+The current structure is:
+
+```
+cmd/api/main.go
+internal/
+  model/      # domain types + business logic (was internal/domain)
+  service/    # use cases + repo/parser interfaces (was internal/app)
+  handler/    # http: handlers, *_dto.go mappers, middleware, server
+              #   (was internal/adapter/http/{handler,dto,middleware,server})
+  store/      # sqlite (was internal/adapter/persistence/sqlite)
+  parser/     # claude (was internal/adapter/parser/claude)
+  config/
+```
+
+This intentionally relaxes two earlier DDD decisions: the domain↔wire
+separation (the dto mappers — weekday/month labels, top-3/recent-5 truncation —
+now live in `handler` beside the domain types in `model`) and the adapter ring.
+The `service` package still owns its repo/parser interfaces, so the use cases
+remain testable against ports.

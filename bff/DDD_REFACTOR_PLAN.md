@@ -1,3 +1,10 @@
+> **Historical record.** This onion/DDD refactor was completed, then the
+> structure was later flattened to a conventional **layered** layout
+> (`model` / `service` / `handler` / `store` / `parser` / `config`). The sections
+> below describe the prior onion design. For the current structure see
+> [LAYERED_PLAN.md](LAYERED_PLAN.md) and the update note in
+> [DDD_GREENFIELD_STRUCTURE.md](DDD_GREENFIELD_STRUCTURE.md).
+
 # Refactor BFF to DDD + Onion Architecture (Ideal)
 
 ## Context
