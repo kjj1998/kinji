@@ -9,11 +9,11 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/kjj1998/kinji/bff/internal/adapter/http/server"
-	"github.com/kjj1998/kinji/bff/internal/adapter/parser/claude"
-	"github.com/kjj1998/kinji/bff/internal/adapter/persistence/sqlite"
-	"github.com/kjj1998/kinji/bff/internal/app"
 	"github.com/kjj1998/kinji/bff/internal/config"
+	"github.com/kjj1998/kinji/bff/internal/handler"
+	"github.com/kjj1998/kinji/bff/internal/parser"
+	"github.com/kjj1998/kinji/bff/internal/service"
+	"github.com/kjj1998/kinji/bff/internal/store"
 )
 
 func main() {
@@ -22,23 +22,23 @@ func main() {
 
 	cfg := config.Load()
 
-	var repo app.TransactionRepository
+	var repo service.TransactionRepository
 
-	db, err := sqlite.NewClient(cfg.SQLitePath)
+	db, err := store.NewClient(cfg.SQLitePath)
 	if err != nil {
 		slog.Error("failed to create sqlite client",
 			"error", err,
 			"path", cfg.SQLitePath)
 		os.Exit(1)
 	}
-	repo = sqlite.NewRepository(db)
-	parser := claude.NewParser(cfg.AnthropicModel)
+	repo = store.NewRepository(db)
+	parser := parser.NewParser(cfg.AnthropicModel)
 
-	handler := server.New(repo, parser, cfg.CORSOrigin)
+	h := handler.New(repo, parser, cfg.CORSOrigin)
 
 	srv := &http.Server{
 		Addr:         ":" + cfg.Port,
-		Handler:      handler,
+		Handler:      h,
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 30 * time.Second,
 		IdleTimeout:  60 * time.Second,
