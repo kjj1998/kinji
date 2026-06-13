@@ -10,8 +10,8 @@ import (
 	"time"
 
 	"github.com/kjj1998/kinji/bff/internal/adapter/http/server"
-	"github.com/kjj1998/kinji/bff/internal/adapter/parser/claude"
 	"github.com/kjj1998/kinji/bff/internal/config"
+	"github.com/kjj1998/kinji/bff/internal/parser"
 	"github.com/kjj1998/kinji/bff/internal/service"
 	"github.com/kjj1998/kinji/bff/internal/store"
 )
@@ -32,7 +32,7 @@ func main() {
 		os.Exit(1)
 	}
 	repo = store.NewRepository(db)
-	parser := claude.NewParser(cfg.AnthropicModel)
+	parser := parser.NewParser(cfg.AnthropicModel)
 
 	handler := server.New(repo, parser, cfg.CORSOrigin)
 

@@ -1,4 +1,4 @@
-package claude
+package parser
 
 import "github.com/anthropics/anthropic-sdk-go"
 
