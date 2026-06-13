@@ -9,11 +9,11 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/kjj1998/kinji/bff/internal/claude"
+	"github.com/kjj1998/kinji/bff/internal/adapter/http/server"
+	"github.com/kjj1998/kinji/bff/internal/adapter/parser/claude"
+	"github.com/kjj1998/kinji/bff/internal/adapter/persistence/sqlite"
+	"github.com/kjj1998/kinji/bff/internal/app"
 	"github.com/kjj1998/kinji/bff/internal/config"
-	"github.com/kjj1998/kinji/bff/internal/repository"
-	"github.com/kjj1998/kinji/bff/internal/repository/sqlite"
-	"github.com/kjj1998/kinji/bff/internal/server"
 )
 
 func main() {
@@ -22,7 +22,7 @@ func main() {
 
 	cfg := config.Load()
 
-	var repo repository.Repository
+	var repo app.TransactionRepository
 
 	db, err := sqlite.NewClient(cfg.SQLitePath)
 	if err != nil {
