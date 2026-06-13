@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/kjj1998/kinji/bff/internal/adapter/http/dto"
 	"github.com/kjj1998/kinji/bff/internal/model"
 	"github.com/kjj1998/kinji/bff/internal/service"
 )
@@ -44,7 +43,7 @@ func (h *TransactionHandler) GetMonthlyTransactions(w http.ResponseWriter, r *ht
 		writeError(w, http.StatusInternalServerError, "failed to get monthly transactions")
 		return
 	}
-	writeJSON(w, http.StatusOK, dto.ToTransactions(transactions))
+	writeJSON(w, http.StatusOK, ToTransactions(transactions))
 }
 
 // ImportStatement parses an uploaded PDF bank statement and
@@ -92,7 +91,7 @@ func (h *TransactionHandler) ImportStatement(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	data, err := json.Marshal(dto.ToTransactions(transactions))
+	data, err := json.Marshal(ToTransactions(transactions))
 	if err != nil {
 		sendError("failed to encode result")
 		return
@@ -126,7 +125,7 @@ func (h *TransactionHandler) SaveTransactions(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	var transactions []dto.Transaction
+	var transactions []Transaction
 
 	r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
 
@@ -137,14 +136,14 @@ func (h *TransactionHandler) SaveTransactions(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	saved, err := h.svc.SaveTransactions(r.Context(), userId, dto.DomainTransactions(transactions))
+	saved, err := h.svc.SaveTransactions(r.Context(), userId, DomainTransactions(transactions))
 	if err != nil {
 		slog.ErrorContext(r.Context(), "save transactions", "error", err)
 		writeError(w, http.StatusInternalServerError, "failed to save transactions")
 		return
 	}
 
-	writeJSON(w, http.StatusOK, dto.ToTransactions(saved))
+	writeJSON(w, http.StatusOK, ToTransactions(saved))
 }
 
 // GetPeriods retrieves the years and months where transaction data is available
@@ -161,5 +160,5 @@ func (h *TransactionHandler) GetPeriods(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	writeJSON(w, http.StatusOK, dto.ToPeriods(periods))
+	writeJSON(w, http.StatusOK, ToPeriods(periods))
 }

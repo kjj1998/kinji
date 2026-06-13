@@ -1,4 +1,4 @@
-package dto
+package handler
 
 import "github.com/kjj1998/kinji/bff/internal/model"
 

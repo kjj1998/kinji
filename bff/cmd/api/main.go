@@ -9,8 +9,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/kjj1998/kinji/bff/internal/adapter/http/server"
 	"github.com/kjj1998/kinji/bff/internal/config"
+	"github.com/kjj1998/kinji/bff/internal/handler"
 	"github.com/kjj1998/kinji/bff/internal/parser"
 	"github.com/kjj1998/kinji/bff/internal/service"
 	"github.com/kjj1998/kinji/bff/internal/store"
@@ -34,11 +34,11 @@ func main() {
 	repo = store.NewRepository(db)
 	parser := parser.NewParser(cfg.AnthropicModel)
 
-	handler := server.New(repo, parser, cfg.CORSOrigin)
+	h := handler.New(repo, parser, cfg.CORSOrigin)
 
 	srv := &http.Server{
 		Addr:         ":" + cfg.Port,
-		Handler:      handler,
+		Handler:      h,
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 30 * time.Second,
 		IdleTimeout:  60 * time.Second,

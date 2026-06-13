@@ -3,7 +3,6 @@ package handler
 import (
 	"net/http"
 
-	"github.com/kjj1998/kinji/bff/internal/adapter/http/dto"
 	"github.com/kjj1998/kinji/bff/internal/service"
 )
 
@@ -32,5 +31,5 @@ func (h *SummaryHandler) Summary(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, "failed to calculate monthly summary")
 		return
 	}
-	writeJSON(w, http.StatusOK, dto.ToTransactionSummary(summary))
+	writeJSON(w, http.StatusOK, ToTransactionSummary(summary))
 }
