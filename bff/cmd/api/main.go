@@ -12,8 +12,8 @@ import (
 	"github.com/kjj1998/kinji/bff/internal/adapter/http/server"
 	"github.com/kjj1998/kinji/bff/internal/adapter/parser/claude"
 	"github.com/kjj1998/kinji/bff/internal/adapter/persistence/sqlite"
-	"github.com/kjj1998/kinji/bff/internal/app"
 	"github.com/kjj1998/kinji/bff/internal/config"
+	"github.com/kjj1998/kinji/bff/internal/service"
 )
 
 func main() {
@@ -22,7 +22,7 @@ func main() {
 
 	cfg := config.Load()
 
-	var repo app.TransactionRepository
+	var repo service.TransactionRepository
 
 	db, err := sqlite.NewClient(cfg.SQLitePath)
 	if err != nil {

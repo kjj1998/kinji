@@ -9,18 +9,18 @@ import (
 	"time"
 
 	"github.com/kjj1998/kinji/bff/internal/adapter/http/dto"
-	"github.com/kjj1998/kinji/bff/internal/app"
 	"github.com/kjj1998/kinji/bff/internal/model"
+	"github.com/kjj1998/kinji/bff/internal/service"
 )
 
 // TransactionHandler handles HTTP requests for transactions.
 type TransactionHandler struct {
-	service app.TransactionService
+	svc service.TransactionService
 }
 
 // NewTransactionHandler returns a TransactionHandler backed by svc.
-func NewTransactionHandler(svc app.TransactionService) *TransactionHandler {
-	return &TransactionHandler{service: svc}
+func NewTransactionHandler(svc service.TransactionService) *TransactionHandler {
+	return &TransactionHandler{svc: svc}
 }
 
 // GetMonthlyTransactions writes the user's monthly transactions as JSON, selected by the
@@ -37,7 +37,7 @@ func (h *TransactionHandler) GetMonthlyTransactions(w http.ResponseWriter, r *ht
 		return
 	}
 
-	transactions, err := h.service.GetMonthlyTransactions(r.Context(), id, month, year)
+	transactions, err := h.svc.GetMonthlyTransactions(r.Context(), id, month, year)
 
 	if err != nil {
 		slog.ErrorContext(r.Context(), "get monthly transactions", "error", err)
@@ -84,7 +84,7 @@ func (h *TransactionHandler) ImportStatement(w http.ResponseWriter, r *http.Requ
 	}
 	sendError := func(msg string) { send("error", fmt.Sprintf(`{"message":%q}`, msg)) }
 
-	transactions, err := h.service.ImportStatement(r.Context(), userId, file, password,
+	transactions, err := h.svc.ImportStatement(r.Context(), userId, file, password,
 		func(stage string) { send("progress", fmt.Sprintf(`{"stage":%q}`, stage)) })
 	if err != nil {
 		slog.ErrorContext(r.Context(), "import statement", "error", err)
@@ -111,7 +111,7 @@ func importErrorMessage(err error) string {
 	case errors.Is(err, model.ErrPDFCorrupt):
 		return "invalid/corrupt pdf file"
 	}
-	var ce *app.ClientError
+	var ce *service.ClientError
 	if errors.As(err, &ce) {
 		return ce.Error()
 	}
@@ -137,7 +137,7 @@ func (h *TransactionHandler) SaveTransactions(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	saved, err := h.service.SaveTransactions(r.Context(), userId, dto.DomainTransactions(transactions))
+	saved, err := h.svc.SaveTransactions(r.Context(), userId, dto.DomainTransactions(transactions))
 	if err != nil {
 		slog.ErrorContext(r.Context(), "save transactions", "error", err)
 		writeError(w, http.StatusInternalServerError, "failed to save transactions")
@@ -154,7 +154,7 @@ func (h *TransactionHandler) GetPeriods(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	periods, err := h.service.GetPeriods(r.Context(), userId)
+	periods, err := h.svc.GetPeriods(r.Context(), userId)
 	if err != nil {
 		slog.ErrorContext(r.Context(), "get periods", "error", err)
 		writeError(w, http.StatusInternalServerError, "failed to get periods")

@@ -10,8 +10,8 @@ import (
 	"log/slog"
 
 	"github.com/anthropics/anthropic-sdk-go"
-	"github.com/kjj1998/kinji/bff/internal/app"
 	"github.com/kjj1998/kinji/bff/internal/model"
+	"github.com/kjj1998/kinji/bff/internal/service"
 	"github.com/pdfcpu/pdfcpu/pkg/api"
 	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu"
 	pdfmodel "github.com/pdfcpu/pdfcpu/pkg/pdfcpu/model"
@@ -23,9 +23,9 @@ type parser struct {
 }
 
 // compile-time check that parser satisfies the application port.
-var _ app.StatementParser = (*parser)(nil)
+var _ service.StatementParser = (*parser)(nil)
 
-func NewParser(model string) app.StatementParser {
+func NewParser(model string) service.StatementParser {
 	return &parser{
 		client: anthropic.NewClient(),  // reads ANTHROPIC_API_KEY from env
 		model:  anthropic.Model(model), // e.g. "claude-sonnet-4-6" from cfg

@@ -5,15 +5,15 @@ import (
 
 	"github.com/kjj1998/kinji/bff/internal/adapter/http/handler"
 	"github.com/kjj1998/kinji/bff/internal/adapter/http/middleware"
-	"github.com/kjj1998/kinji/bff/internal/app"
+	"github.com/kjj1998/kinji/bff/internal/service"
 )
 
-func New(repo app.TransactionRepository, parser app.StatementParser, corsOrigin string) http.Handler {
+func New(repo service.TransactionRepository, parser service.StatementParser, corsOrigin string) http.Handler {
 	mux := http.NewServeMux()
 
 	// services
-	summaryService := app.NewSummaryService(repo)
-	txService := app.NewTransactionService(repo, parser)
+	summaryService := service.NewSummaryService(repo)
+	txService := service.NewTransactionService(repo, parser)
 
 	// handlers
 	txHandler := handler.NewTransactionHandler(txService)

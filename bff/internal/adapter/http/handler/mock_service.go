@@ -4,22 +4,22 @@ import (
 	"context"
 	"mime/multipart"
 
-	"github.com/kjj1998/kinji/bff/internal/app"
 	"github.com/kjj1998/kinji/bff/internal/model"
+	"github.com/kjj1998/kinji/bff/internal/service"
 )
 
-// MockSummaryService is a function-backed test double for app.SummaryService.
+// MockSummaryService is a function-backed test double for service.SummaryService.
 type MockSummaryService struct {
 	GenerateMonthlySummaryFn func(ctx context.Context, userId, month, year string) (*model.MonthlySummary, error)
 }
 
-var _ app.SummaryService = (*MockSummaryService)(nil)
+var _ service.SummaryService = (*MockSummaryService)(nil)
 
 func (m *MockSummaryService) GenerateMonthlySummary(ctx context.Context, userId, month, year string) (*model.MonthlySummary, error) {
 	return m.GenerateMonthlySummaryFn(ctx, userId, month, year)
 }
 
-// MockTransactionService is a function-backed test double for app.TransactionService.
+// MockTransactionService is a function-backed test double for service.TransactionService.
 type MockTransactionService struct {
 	GetMonthlyTransactionsFn func(ctx context.Context, userId, month, year string) ([]model.Transaction, error)
 	ImportStatementFn        func(ctx context.Context, userId string, statement multipart.File, password string, onProgress func(stage string)) ([]model.Transaction, error)
@@ -27,7 +27,7 @@ type MockTransactionService struct {
 	GetPeriodsFn             func(ctx context.Context, userId string) ([]model.Period, error)
 }
 
-var _ app.TransactionService = (*MockTransactionService)(nil)
+var _ service.TransactionService = (*MockTransactionService)(nil)
 
 func (m *MockTransactionService) GetMonthlyTransactions(ctx context.Context, userId, month, year string) ([]model.Transaction, error) {
 	return m.GetMonthlyTransactionsFn(ctx, userId, month, year)

@@ -1,4 +1,4 @@
-package app
+package service
 
 // ClientError is an application error caused by bad client input. The HTTP
 // adapter maps it to a 4xx response, surfacing Reason to the caller.

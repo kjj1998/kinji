@@ -4,15 +4,15 @@ import (
 	"net/http"
 
 	"github.com/kjj1998/kinji/bff/internal/adapter/http/dto"
-	"github.com/kjj1998/kinji/bff/internal/app"
+	"github.com/kjj1998/kinji/bff/internal/service"
 )
 
 type SummaryHandler struct {
-	service app.SummaryService
+	svc service.SummaryService
 }
 
-func NewSummaryHandler(svc app.SummaryService) *SummaryHandler {
-	return &SummaryHandler{service: svc}
+func NewSummaryHandler(svc service.SummaryService) *SummaryHandler {
+	return &SummaryHandler{svc: svc}
 }
 
 func (h *SummaryHandler) Summary(w http.ResponseWriter, r *http.Request) {
@@ -27,7 +27,7 @@ func (h *SummaryHandler) Summary(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	summary, err := h.service.GenerateMonthlySummary(r.Context(), id, month, year)
+	summary, err := h.svc.GenerateMonthlySummary(r.Context(), id, month, year)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "failed to calculate monthly summary")
 		return

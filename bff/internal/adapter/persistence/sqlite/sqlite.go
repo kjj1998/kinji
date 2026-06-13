@@ -6,18 +6,18 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/kjj1998/kinji/bff/internal/app"
 	"github.com/kjj1998/kinji/bff/internal/model"
+	"github.com/kjj1998/kinji/bff/internal/service"
 	_ "modernc.org/sqlite"
 )
 
-// Repository is the sqlite-backed implementation of app.TransactionRepository.
+// Repository is the sqlite-backed implementation of service.TransactionRepository.
 type Repository struct {
 	client *sql.DB
 }
 
 // compile-time check that Repository satisfies the application port.
-var _ app.TransactionRepository = (*Repository)(nil)
+var _ service.TransactionRepository = (*Repository)(nil)
 
 func NewClient(path string) (*sql.DB, error) {
 	dsn := "file:" + path + "?_pragma=busy_timeout(5000)&journal_mode=WAL"
