@@ -11,10 +11,10 @@ import (
 
 	"github.com/anthropics/anthropic-sdk-go"
 	"github.com/kjj1998/kinji/bff/internal/app"
-	"github.com/kjj1998/kinji/bff/internal/domain"
+	"github.com/kjj1998/kinji/bff/internal/model"
 	"github.com/pdfcpu/pdfcpu/pkg/api"
 	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu"
-	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/model"
+	pdfmodel "github.com/pdfcpu/pdfcpu/pkg/pdfcpu/model"
 )
 
 type parser struct {
@@ -34,13 +34,13 @@ func NewParser(model string) app.StatementParser {
 
 // Extract decrypts/validates the statement PDF, runs the LLM extraction, and
 // returns the raw statement rows (with running balances). Balance reconciliation
-// is the domain's responsibility (see domain.Statement), so it is not done here.
+// is the domain's responsibility (see model.Statement), so it is not done here.
 func (p *parser) Extract(
 	ctx context.Context,
 	pdf []byte,
 	password string,
 	onProgress func(stage string),
-) ([]domain.StatementLine, error) {
+) ([]model.StatementLine, error) {
 	onProgress("validating")
 	pdf, err := preparePDF(pdf, password)
 	if err != nil {
@@ -57,18 +57,18 @@ func (p *parser) Extract(
 		return nil, err
 	}
 
-	lines := make([]domain.StatementLine, 0, len(input.Transactions))
+	lines := make([]model.StatementLine, 0, len(input.Transactions))
 	for _, t := range input.Transactions {
-		cat, err := domain.ParseCategory(t.Category)
+		cat, err := model.ParseCategory(t.Category)
 		if err != nil {
 			return nil, fmt.Errorf("row for %q: %w", t.Merchant, err)
 		}
-		dir, err := domain.ParseDirection(t.Direction)
+		dir, err := model.ParseDirection(t.Direction)
 		if err != nil {
 			return nil, fmt.Errorf("row for %q: %w", t.Merchant, err)
 		}
-		lines = append(lines, domain.StatementLine{
-			Txn: domain.Transaction{
+		lines = append(lines, model.StatementLine{
+			Txn: model.Transaction{
 				Date:      t.Date,
 				Merchant:  t.Merchant,
 				Category:  cat,
@@ -87,23 +87,23 @@ func (p *parser) Extract(
 // mapping pdfcpu failures to domain error sentinels.
 func preparePDF(pdf []byte, password string) ([]byte, error) {
 	if password == "" {
-		if err := api.Validate(bytes.NewReader(pdf), model.NewDefaultConfiguration()); err != nil {
+		if err := api.Validate(bytes.NewReader(pdf), pdfmodel.NewDefaultConfiguration()); err != nil {
 			if errors.Is(err, pdfcpu.ErrWrongPassword) {
-				return nil, domain.ErrPDFPasswordRequired
+				return nil, model.ErrPDFPasswordRequired
 			}
-			return nil, fmt.Errorf("%w: %v", domain.ErrPDFCorrupt, err)
+			return nil, fmt.Errorf("%w: %v", model.ErrPDFCorrupt, err)
 		}
 		return pdf, nil
 	}
 
 	var out bytes.Buffer
-	conf := model.NewDefaultConfiguration()
+	conf := pdfmodel.NewDefaultConfiguration()
 	conf.UserPW = password
 	if err := api.Decrypt(bytes.NewReader(pdf), &out, conf); err != nil {
 		if errors.Is(err, pdfcpu.ErrWrongPassword) {
-			return nil, domain.ErrPDFWrongPassword
+			return nil, model.ErrPDFWrongPassword
 		}
-		return nil, fmt.Errorf("%w: %v", domain.ErrPDFCorrupt, err)
+		return nil, fmt.Errorf("%w: %v", model.ErrPDFCorrupt, err)
 	}
 	return out.Bytes(), nil
 }

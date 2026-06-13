@@ -8,15 +8,15 @@ import (
 	"mime/multipart"
 
 	"github.com/google/uuid"
-	"github.com/kjj1998/kinji/bff/internal/domain"
+	"github.com/kjj1998/kinji/bff/internal/model"
 )
 
 // TransactionService is the use-case API for working with a user's transactions.
 type TransactionService interface {
-	GetMonthlyTransactions(ctx context.Context, userId, month, year string) ([]domain.Transaction, error)
-	ImportStatement(ctx context.Context, userId string, statement multipart.File, password string, onProgress func(stage string)) ([]domain.Transaction, error)
-	SaveTransactions(ctx context.Context, userId string, transactions []domain.Transaction) ([]domain.Transaction, error)
-	GetPeriods(ctx context.Context, userId string) ([]domain.Period, error)
+	GetMonthlyTransactions(ctx context.Context, userId, month, year string) ([]model.Transaction, error)
+	ImportStatement(ctx context.Context, userId string, statement multipart.File, password string, onProgress func(stage string)) ([]model.Transaction, error)
+	SaveTransactions(ctx context.Context, userId string, transactions []model.Transaction) ([]model.Transaction, error)
+	GetPeriods(ctx context.Context, userId string) ([]model.Period, error)
 }
 
 type transactionService struct {
@@ -28,7 +28,7 @@ func NewTransactionService(repo TransactionRepository, parser StatementParser) T
 	return &transactionService{repo: repo, parser: parser}
 }
 
-func (t *transactionService) GetMonthlyTransactions(ctx context.Context, userId, month, year string) ([]domain.Transaction, error) {
+func (t *transactionService) GetMonthlyTransactions(ctx context.Context, userId, month, year string) ([]model.Transaction, error) {
 	slog.DebugContext(ctx, "get monthly transactions for", "userId", userId, "month", month, "year", year)
 	return t.repo.GetMonthlyTransactions(ctx, userId, month, year)
 }
@@ -36,14 +36,14 @@ func (t *transactionService) GetMonthlyTransactions(ctx context.Context, userId,
 // ImportStatement reads an uploaded statement PDF, extracts its rows via the
 // parser, validates the running-balance invariant, and stamps each resulting
 // transaction with the user id and a fresh id. PDF decryption/validation lives in
-// the parser adapter; balance reconciliation lives in domain.Statement.
+// the parser adapter; balance reconciliation lives in model.Statement.
 func (t *transactionService) ImportStatement(
 	ctx context.Context,
 	userId string,
 	statement multipart.File,
 	password string,
 	onProgress func(stage string),
-) ([]domain.Transaction, error) {
+) ([]model.Transaction, error) {
 	pdfBytes, err := io.ReadAll(statement)
 	if err != nil {
 		return nil, fmt.Errorf("read pdf: %w", err)
@@ -57,7 +57,7 @@ func (t *transactionService) ImportStatement(
 	}
 
 	onProgress("checking_balances")
-	statementAgg := domain.NewStatement(lines)
+	statementAgg := model.NewStatement(lines)
 	if err := statementAgg.Validate(); err != nil {
 		return nil, fmt.Errorf("validate statement: %w", err)
 	}
@@ -73,8 +73,8 @@ func (t *transactionService) ImportStatement(
 func (t *transactionService) SaveTransactions(
 	ctx context.Context,
 	userId string,
-	transactions []domain.Transaction,
-) ([]domain.Transaction, error) {
+	transactions []model.Transaction,
+) ([]model.Transaction, error) {
 	slog.Info(fmt.Sprintf("saving %d transactions into the database", len(transactions)))
 
 	if err := t.repo.SaveTransactions(ctx, userId, transactions); err != nil {
@@ -85,7 +85,7 @@ func (t *transactionService) SaveTransactions(
 	return transactions, nil
 }
 
-func (t *transactionService) GetPeriods(ctx context.Context, userId string) ([]domain.Period, error) {
+func (t *transactionService) GetPeriods(ctx context.Context, userId string) ([]model.Period, error) {
 	slog.InfoContext(ctx, "getting transaction periods for userId", "userId", userId)
 	return t.repo.GetTransactionPeriods(ctx, userId)
 }

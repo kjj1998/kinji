@@ -10,7 +10,7 @@ import (
 
 	"github.com/kjj1998/kinji/bff/internal/adapter/http/dto"
 	"github.com/kjj1998/kinji/bff/internal/app"
-	"github.com/kjj1998/kinji/bff/internal/domain"
+	"github.com/kjj1998/kinji/bff/internal/model"
 )
 
 // TransactionHandler handles HTTP requests for transactions.
@@ -104,11 +104,11 @@ func (h *TransactionHandler) ImportStatement(w http.ResponseWriter, r *http.Requ
 // PDF and bad-input problems while hiding internal failures.
 func importErrorMessage(err error) string {
 	switch {
-	case errors.Is(err, domain.ErrPDFPasswordRequired):
+	case errors.Is(err, model.ErrPDFPasswordRequired):
 		return "pdf password required"
-	case errors.Is(err, domain.ErrPDFWrongPassword):
+	case errors.Is(err, model.ErrPDFWrongPassword):
 		return "wrong pdf password given"
-	case errors.Is(err, domain.ErrPDFCorrupt):
+	case errors.Is(err, model.ErrPDFCorrupt):
 		return "invalid/corrupt pdf file"
 	}
 	var ce *app.ClientError

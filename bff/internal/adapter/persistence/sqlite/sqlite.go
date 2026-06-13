@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/kjj1998/kinji/bff/internal/app"
-	"github.com/kjj1998/kinji/bff/internal/domain"
+	"github.com/kjj1998/kinji/bff/internal/model"
 	_ "modernc.org/sqlite"
 )
 
@@ -48,16 +48,16 @@ func NewRepository(client *sql.DB) *Repository {
 func (d *Repository) getTransactionsWithinDateRange(
 	ctx context.Context,
 	userId, from, to string,
-) ([]domain.Transaction, error) {
+) ([]model.Transaction, error) {
 	rows, err := d.client.QueryContext(ctx, getAllTransactionsWithinDateRange, userId, from, to)
 	if err != nil {
 		return nil, fmt.Errorf("querying transactions userId %q from %q to %q: %w", userId, from, to, err)
 	}
 	defer rows.Close()
 
-	txs := []domain.Transaction{}
+	txs := []model.Transaction{}
 	for rows.Next() {
-		var t domain.Transaction
+		var t model.Transaction
 		if err := rows.Scan(&t.ID, &t.UserID, &t.Date, &t.Merchant,
 			&t.Category, &t.Amount, &t.Direction, &t.Notes, &t.Split); err != nil {
 			return nil, fmt.Errorf("scanning transaction: %w", err)
@@ -74,14 +74,14 @@ func (d *Repository) getTransactionsWithinDateRange(
 func (d *Repository) getPeriods(
 	ctx context.Context,
 	userId string,
-) ([]domain.Period, error) {
+) ([]model.Period, error) {
 	rows, err := d.client.QueryContext(ctx, getMonthAndYearWhichTransactionsOccur, userId)
 	if err != nil {
 		return nil, fmt.Errorf("getting periods: %w", err)
 	}
 	defer rows.Close()
 
-	byYear := map[int]*domain.Period{}
+	byYear := map[int]*model.Period{}
 	var order []int
 	for rows.Next() {
 		var y, m int
@@ -89,7 +89,7 @@ func (d *Repository) getPeriods(
 			return nil, fmt.Errorf("scanning periods: %w", err)
 		}
 		if _, ok := byYear[y]; !ok {
-			byYear[y] = &domain.Period{Year: y}
+			byYear[y] = &model.Period{Year: y}
 			order = append(order, y)
 		}
 		byYear[y].Months = append(byYear[y].Months, m)
@@ -98,14 +98,14 @@ func (d *Repository) getPeriods(
 		return nil, fmt.Errorf("iterating period rows: %w", err)
 	}
 
-	out := make([]domain.Period, 0, len(order))
+	out := make([]model.Period, 0, len(order))
 	for _, y := range order {
 		out = append(out, *byYear[y])
 	}
 	return out, nil
 }
 
-func (d *Repository) GetMonthlyTransactions(ctx context.Context, userId, month, year string) ([]domain.Transaction, error) {
+func (d *Repository) GetMonthlyTransactions(ctx context.Context, userId, month, year string) ([]model.Transaction, error) {
 	from, to := GetMonthRangeDateStrings(month, year)
 	txs, err := d.getTransactionsWithinDateRange(ctx, userId, from, to)
 	if err != nil {
@@ -119,7 +119,7 @@ func (d *Repository) GetMonthlyTopMerchants(
 	ctx context.Context,
 	userId, month, year string,
 	limit int,
-) ([]domain.MerchantSpending, error) {
+) ([]model.MerchantSpending, error) {
 	from, to := GetMonthRangeDateStrings(month, year)
 	rows, err := d.client.QueryContext(ctx, getTopSpendingMerchantsWithinDateRange, userId, from, to, limit)
 	if err != nil {
@@ -127,9 +127,9 @@ func (d *Repository) GetMonthlyTopMerchants(
 	}
 	defer rows.Close()
 
-	merchants := []domain.MerchantSpending{}
+	merchants := []model.MerchantSpending{}
 	for rows.Next() {
-		var m domain.MerchantSpending
+		var m model.MerchantSpending
 		if err := rows.Scan(&m.Name, &m.Amount, &m.Category); err != nil {
 			return nil, fmt.Errorf("scanning merchant: %w", err)
 		}
@@ -145,16 +145,16 @@ func (d *Repository) GetMonthlyTopMerchants(
 func (d *Repository) GetTotalIncomeTotalSpentAndNetSavings(
 	ctx context.Context,
 	userId, month, year string,
-) (domain.ValueAndChange[int], domain.ValueAndChange[int], domain.ValueAndChange[int], int, error) {
+) (model.ValueAndChange[int], model.ValueAndChange[int], model.ValueAndChange[int], int, error) {
 	curMonth, prevMonth, err := currentAndPreviousMonth(month, year)
 	if err != nil {
-		return domain.ValueAndChange[int]{}, domain.ValueAndChange[int]{}, domain.ValueAndChange[int]{},
+		return model.ValueAndChange[int]{}, model.ValueAndChange[int]{}, model.ValueAndChange[int]{},
 			0, fmt.Errorf("computing current and previous month: %w", err)
 	}
 	rows, err := d.client.QueryContext(
 		ctx, getTotalIncomeTotalSpentAndNetSavingsForTwoMonths, userId, curMonth, prevMonth)
 	if err != nil {
-		return domain.ValueAndChange[int]{}, domain.ValueAndChange[int]{}, domain.ValueAndChange[int]{},
+		return model.ValueAndChange[int]{}, model.ValueAndChange[int]{}, model.ValueAndChange[int]{},
 			0, fmt.Errorf("querying income/spent/savings: %w", err)
 	}
 	defer rows.Close()
@@ -167,14 +167,14 @@ func (d *Repository) GetTotalIncomeTotalSpentAndNetSavings(
 		var month string
 		var t monthTotals
 		if err := rows.Scan(&month, &t.income, &t.spend, &t.saving); err != nil {
-			return domain.ValueAndChange[int]{}, domain.ValueAndChange[int]{}, domain.ValueAndChange[int]{},
+			return model.ValueAndChange[int]{}, model.ValueAndChange[int]{}, model.ValueAndChange[int]{},
 				0, fmt.Errorf("scanning income/spent/savings: %w", err)
 		}
 		totalsByMonth[month] = t
 	}
 
 	if err := rows.Err(); err != nil {
-		return domain.ValueAndChange[int]{}, domain.ValueAndChange[int]{}, domain.ValueAndChange[int]{},
+		return model.ValueAndChange[int]{}, model.ValueAndChange[int]{}, model.ValueAndChange[int]{},
 			0, fmt.Errorf("iterating income/spent/savings rows: %w", err)
 	}
 
@@ -190,9 +190,9 @@ func (d *Repository) GetTotalIncomeTotalSpentAndNetSavings(
 		savings = append(savings, prev.saving)
 	}
 
-	return domain.NewValueAndChange(incomes),
-		domain.NewValueAndChange(spendings),
-		domain.NewValueAndChange(savings),
+	return model.NewValueAndChange(incomes),
+		model.NewValueAndChange(spendings),
+		model.NewValueAndChange(savings),
 		prev.spend,
 		nil
 }
@@ -200,7 +200,7 @@ func (d *Repository) GetTotalIncomeTotalSpentAndNetSavings(
 func (d *Repository) GetCategorySpendingForLastTwoMonths(
 	ctx context.Context,
 	userId, month, year string,
-) (map[domain.Category]int, map[domain.Category]int, error) {
+) (map[model.Category]int, map[model.Category]int, error) {
 	curMonth, prevMonth, err := currentAndPreviousMonth(month, year)
 	if err != nil {
 		return nil, nil, fmt.Errorf("computing current and previous month: %w", err)
@@ -212,11 +212,11 @@ func (d *Repository) GetCategorySpendingForLastTwoMonths(
 	}
 	defer rows.Close()
 
-	cur := make(map[domain.Category]int)
-	prev := make(map[domain.Category]int)
+	cur := make(map[model.Category]int)
+	prev := make(map[model.Category]int)
 	for rows.Next() {
 		var monthKey string
-		var category domain.Category
+		var category model.Category
 		var total int
 		if err := rows.Scan(&monthKey, &category, &total); err != nil {
 			return nil, nil, fmt.Errorf("scanning category spending: %w", err)
@@ -238,7 +238,7 @@ func (d *Repository) GetMonthlyTopCategories(
 	ctx context.Context,
 	userId, month, year string,
 	limit int,
-) ([]domain.CategorySpending, error) {
+) ([]model.CategorySpending, error) {
 	from, to := GetMonthRangeDateStrings(month, year)
 	rows, err := d.client.QueryContext(ctx, getTopSpendingCategoriesWithinDateRange, userId, from, to, limit)
 	if err != nil {
@@ -246,9 +246,9 @@ func (d *Repository) GetMonthlyTopCategories(
 	}
 	defer rows.Close()
 
-	categorySpendings := []domain.CategorySpending{}
+	categorySpendings := []model.CategorySpending{}
 	for rows.Next() {
-		var cs domain.CategorySpending
+		var cs model.CategorySpending
 		if err := rows.Scan(&cs.Category, &cs.Amount); err != nil {
 			return nil, fmt.Errorf("scanning category: %w", err)
 		}
@@ -299,7 +299,7 @@ func (d *Repository) GetLastSixMonthsExpenses(
 func (d *Repository) SaveTransactions(
 	ctx context.Context,
 	userId string,
-	transactions []domain.Transaction,
+	transactions []model.Transaction,
 ) error {
 	tx, err := d.client.BeginTx(ctx, nil)
 	if err != nil {
@@ -322,10 +322,10 @@ func (d *Repository) SaveTransactions(
 	return tx.Commit()
 }
 
-func (d *Repository) GetTransactionPeriods(ctx context.Context, userId string) ([]domain.Period, error) {
+func (d *Repository) GetTransactionPeriods(ctx context.Context, userId string) ([]model.Period, error) {
 	periods, err := d.getPeriods(ctx, userId)
 	if err != nil {
-		return []domain.Period{}, fmt.Errorf("getting periods: %w", err)
+		return []model.Period{}, fmt.Errorf("getting periods: %w", err)
 	}
 
 	return periods, nil

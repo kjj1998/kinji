@@ -4,29 +4,29 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kjj1998/kinji/bff/internal/domain"
+	"github.com/kjj1998/kinji/bff/internal/model"
 )
 
 func TestToTransactionSummary_LabelsAndTruncation(t *testing.T) {
-	changes := make([]domain.CategorySpendingChange, 5) // more than maxBiggestChanges
+	changes := make([]model.CategorySpendingChange, 5) // more than maxBiggestChanges
 	for i := range changes {
-		changes[i] = domain.CategorySpendingChange{Category: domain.CategoryFood, Amount: 100 - i}
+		changes[i] = model.CategorySpendingChange{Category: model.CategoryFood, Amount: 100 - i}
 	}
-	recent := make([]domain.Transaction, 7) // more than maxRecentTransactions
+	recent := make([]model.Transaction, 7) // more than maxRecentTransactions
 	for i := range recent {
-		recent[i] = domain.Transaction{ID: string(rune('a' + i))}
+		recent[i] = model.Transaction{ID: string(rune('a' + i))}
 	}
 
-	in := &domain.MonthlySummary{
-		TotalIncome:      domain.ValueAndChange[int]{Value: 1000, Change: 100},
+	in := &model.MonthlySummary{
+		TotalIncome:      model.ValueAndChange[int]{Value: 1000, Change: 100},
 		SavingsRate:      43.4,
 		LastMonthSpent:   500,
 		SummaryStatement: "you did fine",
-		DailyTrend: []domain.DaySpending{
+		DailyTrend: []model.DaySpending{
 			{Weekday: time.Monday, Amount: 500},
 			{Weekday: time.Sunday, Amount: 90},
 		},
-		MonthlyTrend: []domain.MonthSpending{
+		MonthlyTrend: []model.MonthSpending{
 			{Month: time.Date(2026, time.January, 1, 0, 0, 0, 0, time.UTC), Amount: 0},
 			{Month: time.Date(2026, time.June, 1, 0, 0, 0, 0, time.UTC), Amount: 1000},
 		},
