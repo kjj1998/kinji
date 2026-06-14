@@ -8,7 +8,6 @@ import (
 
 	"github.com/kjj1998/kinji/bff/internal/model"
 	"github.com/kjj1998/kinji/bff/internal/service"
-	_ "modernc.org/sqlite"
 )
 
 // Repository is the sqlite-backed implementation of service.TransactionRepository.
@@ -18,28 +17,6 @@ type Repository struct {
 
 // compile-time check that Repository satisfies the application port.
 var _ service.TransactionRepository = (*Repository)(nil)
-
-func NewClient(path string) (*sql.DB, error) {
-	dsn := "file:" + path + "?_pragma=busy_timeout(5000)&journal_mode=WAL"
-
-	db, err := sql.Open("sqlite", dsn)
-
-	if err != nil {
-		return nil, fmt.Errorf("opening sqlite database %q: %w", path, err)
-	}
-
-	if err := db.Ping(); err != nil {
-		db.Close()
-		return nil, fmt.Errorf("pinging sqlite: %w", err)
-	}
-
-	if _, err := db.Exec(schema); err != nil {
-		db.Close()
-		return nil, fmt.Errorf("applying schema: %w", err)
-	}
-
-	return db, nil
-}
 
 func NewRepository(client *sql.DB) *Repository {
 	return &Repository{client: client}
