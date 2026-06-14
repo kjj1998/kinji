@@ -1,6 +1,10 @@
 package handler
 
-import "github.com/kjj1998/kinji/bff/internal/model"
+import (
+	"github.com/kjj1998/kinji/bff/internal/shared"
+	"github.com/kjj1998/kinji/bff/internal/summary/domain"
+	txhandler "github.com/kjj1998/kinji/bff/internal/transaction/handler"
+)
 
 // View policy: how many ranked items the monthly summary screen shows.
 const (
@@ -14,14 +18,14 @@ type ValueAndChange[T int | float64] struct {
 }
 
 type Merchant struct {
-	Name     string         `json:"name"`
-	Amount   int            `json:"amount"`
-	Category model.Category `json:"category"`
+	Name     string          `json:"name"`
+	Amount   int             `json:"amount"`
+	Category shared.Category `json:"category"`
 }
 
 type CategorySpending struct {
-	Category model.Category `json:"category"`
-	Amount   int            `json:"amount"`
+	Category shared.Category `json:"category"`
+	Amount   int             `json:"amount"`
 }
 
 type DateSpending struct {
@@ -30,11 +34,11 @@ type DateSpending struct {
 }
 
 type CategorySpendingChange struct {
-	Category         model.Category `json:"category"`
-	Amount           int            `json:"amount"`
-	Change           int            `json:"change"`
-	PercentageChange int            `json:"percentageChange"`
-	IsNew            bool           `json:"isNew"`
+	Category         shared.Category `json:"category"`
+	Amount           int             `json:"amount"`
+	Change           int             `json:"change"`
+	PercentageChange int             `json:"percentageChange"`
+	IsNew            bool            `json:"isNew"`
 }
 
 type TransactionSummary struct {
@@ -49,13 +53,13 @@ type TransactionSummary struct {
 	DailyTrend         []DateSpending           `json:"dailyTrend"`
 	BiggestChanges     []CategorySpendingChange `json:"biggestChanges"`
 	TopMerchants       []Merchant               `json:"topMerchants"`
-	RecentTransactions []Transaction            `json:"recentTransactions"`
+	RecentTransactions []txhandler.Transaction  `json:"recentTransactions"`
 }
 
 // ToTransactionSummary maps the domain read-model to its wire representation,
 // rendering display labels (weekday/month) and applying the view truncation
 // (top biggest changes, most-recent transactions).
-func ToTransactionSummary(s *model.MonthlySummary) *TransactionSummary {
+func ToTransactionSummary(s *domain.MonthlySummary) *TransactionSummary {
 	if s == nil {
 		return nil
 	}
@@ -71,15 +75,15 @@ func ToTransactionSummary(s *model.MonthlySummary) *TransactionSummary {
 		DailyTrend:         toDailyTrend(s.DailyTrend),
 		BiggestChanges:     toCategorySpendingChanges(capSlice(s.BiggestChanges, maxBiggestChanges)),
 		TopMerchants:       toMerchants(s.TopMerchants),
-		RecentTransactions: ToTransactions(capSlice(s.RecentTransactions, maxRecentTransactions)),
+		RecentTransactions: txhandler.ToTransactions(capSlice(s.RecentTransactions, maxRecentTransactions)),
 	}
 }
 
-func toValueAndChange(v model.ValueAndChange[int]) ValueAndChange[int] {
+func toValueAndChange(v domain.ValueAndChange[int]) ValueAndChange[int] {
 	return ValueAndChange[int]{Value: v.Value, Change: v.Change}
 }
 
-func toCategorySpendings(in []model.CategorySpending) []CategorySpending {
+func toCategorySpendings(in []domain.CategorySpending) []CategorySpending {
 	out := make([]CategorySpending, len(in))
 	for i, c := range in {
 		out[i] = CategorySpending{Category: c.Category, Amount: c.Amount}
@@ -87,7 +91,7 @@ func toCategorySpendings(in []model.CategorySpending) []CategorySpending {
 	return out
 }
 
-func toMerchants(in []model.MerchantSpending) []Merchant {
+func toMerchants(in []domain.MerchantSpending) []Merchant {
 	out := make([]Merchant, len(in))
 	for i, m := range in {
 		out[i] = Merchant{Name: m.Name, Amount: m.Amount, Category: m.Category}
@@ -95,7 +99,7 @@ func toMerchants(in []model.MerchantSpending) []Merchant {
 	return out
 }
 
-func toCategorySpendingChanges(in []model.CategorySpendingChange) []CategorySpendingChange {
+func toCategorySpendingChanges(in []domain.CategorySpendingChange) []CategorySpendingChange {
 	out := make([]CategorySpendingChange, len(in))
 	for i, c := range in {
 		out[i] = CategorySpendingChange{
@@ -110,7 +114,7 @@ func toCategorySpendingChanges(in []model.CategorySpendingChange) []CategorySpen
 }
 
 // toDailyTrend renders each weekday bucket as a three-letter label (e.g. "Mon").
-func toDailyTrend(in []model.DaySpending) []DateSpending {
+func toDailyTrend(in []domain.DaySpending) []DateSpending {
 	out := make([]DateSpending, len(in))
 	for i, d := range in {
 		out[i] = DateSpending{Date: d.Weekday.String()[:3], Amount: d.Amount}
@@ -119,7 +123,7 @@ func toDailyTrend(in []model.DaySpending) []DateSpending {
 }
 
 // toMonthlyTrend renders each month bucket as a short month label (e.g. "Jan").
-func toMonthlyTrend(in []model.MonthSpending) []DateSpending {
+func toMonthlyTrend(in []domain.MonthSpending) []DateSpending {
 	out := make([]DateSpending, len(in))
 	for i, m := range in {
 		out[i] = DateSpending{Date: m.Month.Format("Jan"), Amount: m.Amount}

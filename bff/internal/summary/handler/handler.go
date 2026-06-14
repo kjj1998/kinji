@@ -3,7 +3,8 @@ package handler
 import (
 	"net/http"
 
-	"github.com/kjj1998/kinji/bff/internal/service"
+	platformhttp "github.com/kjj1998/kinji/bff/internal/platform/http"
+	"github.com/kjj1998/kinji/bff/internal/summary/service"
 )
 
 type SummaryHandler struct {
@@ -15,21 +16,21 @@ func NewSummaryHandler(svc service.SummaryService) *SummaryHandler {
 }
 
 func (h *SummaryHandler) Summary(w http.ResponseWriter, r *http.Request) {
-	id, ok := requireUserId(w, r)
+	id, ok := platformhttp.RequireUserId(w, r)
 	if !ok {
 		return
 	}
 
 	q := r.URL.Query()
-	month, year, ok := parseMonthYear(w, q.Get("month"), q.Get("year"))
+	month, year, ok := platformhttp.ParseMonthYear(w, q.Get("month"), q.Get("year"))
 	if !ok {
 		return
 	}
 
 	summary, err := h.svc.GenerateMonthlySummary(r.Context(), id, month, year)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "failed to calculate monthly summary")
+		platformhttp.WriteError(w, http.StatusInternalServerError, "failed to calculate monthly summary")
 		return
 	}
-	writeJSON(w, http.StatusOK, ToTransactionSummary(summary))
+	platformhttp.WriteJSON(w, http.StatusOK, ToTransactionSummary(summary))
 }
