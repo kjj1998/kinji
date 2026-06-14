@@ -1,22 +1,22 @@
 package handler
 
-import "github.com/kjj1998/kinji/bff/internal/model"
+import "github.com/kjj1998/kinji/bff/internal/shared"
 
-// Transaction is the wire representation of a model.Transaction.
+// Transaction is the wire representation of a shared.Transaction.
 type Transaction struct {
-	ID        string          `json:"id"`
-	UserID    string          `json:"userId"`
-	Date      string          `json:"date"`
-	Merchant  string          `json:"merchant"`
-	Category  model.Category  `json:"category"`
-	Amount    int             `json:"amount"`
-	Direction model.Direction `json:"direction"`
-	Notes     string          `json:"notes,omitempty"`
-	Split     int             `json:"split,omitempty"`
+	ID        string           `json:"id"`
+	UserID    string           `json:"userId"`
+	Date      string           `json:"date"`
+	Merchant  string           `json:"merchant"`
+	Category  shared.Category  `json:"category"`
+	Amount    int              `json:"amount"`
+	Direction shared.Direction `json:"direction"`
+	Notes     string           `json:"notes,omitempty"`
+	Split     int              `json:"split,omitempty"`
 }
 
 // ToTransaction maps a domain transaction to its wire representation.
-func ToTransaction(t model.Transaction) Transaction {
+func ToTransaction(t shared.Transaction) Transaction {
 	return Transaction{
 		ID:        t.ID,
 		UserID:    t.UserID,
@@ -31,8 +31,8 @@ func ToTransaction(t model.Transaction) Transaction {
 }
 
 // Domain maps a wire transaction back to the domain entity.
-func (t Transaction) Domain() model.Transaction {
-	return model.Transaction{
+func (t Transaction) Domain() shared.Transaction {
+	return shared.Transaction{
 		ID:        t.ID,
 		UserID:    t.UserID,
 		Date:      t.Date,
@@ -47,7 +47,7 @@ func (t Transaction) Domain() model.Transaction {
 
 // ToTransactions maps a slice of domain transactions to wire representations.
 // The result is never nil so it marshals as [] rather than null.
-func ToTransactions(txns []model.Transaction) []Transaction {
+func ToTransactions(txns []shared.Transaction) []Transaction {
 	out := make([]Transaction, len(txns))
 	for i, t := range txns {
 		out[i] = ToTransaction(t)
@@ -56,8 +56,8 @@ func ToTransactions(txns []model.Transaction) []Transaction {
 }
 
 // DomainTransactions maps a slice of wire transactions back to domain entities.
-func DomainTransactions(in []Transaction) []model.Transaction {
-	out := make([]model.Transaction, len(in))
+func DomainTransactions(in []Transaction) []shared.Transaction {
+	out := make([]shared.Transaction, len(in))
 	for i, t := range in {
 		out[i] = t.Domain()
 	}

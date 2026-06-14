@@ -4,18 +4,18 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/kjj1998/kinji/bff/internal/model"
+	"github.com/kjj1998/kinji/bff/internal/shared"
 )
 
-func sampleDomainTransaction() model.Transaction {
-	return model.Transaction{
+func sampleDomainTransaction() shared.Transaction {
+	return shared.Transaction{
 		ID:        "txn-1",
 		UserID:    "user-1",
 		Date:      "2026-06-13",
 		Merchant:  "Cafe",
-		Category:  model.CategoryFood,
+		Category:  shared.CategoryFood,
 		Amount:    1250,
-		Direction: model.Outflow,
+		Direction: shared.Outflow,
 		Notes:     "lunch",
 		Split:     2,
 	}
@@ -31,9 +31,9 @@ func TestToTransaction(t *testing.T) {
 		UserID:    "user-1",
 		Date:      "2026-06-13",
 		Merchant:  "Cafe",
-		Category:  model.CategoryFood,
+		Category:  shared.CategoryFood,
 		Amount:    1250,
-		Direction: model.Outflow,
+		Direction: shared.Outflow,
 		Notes:     "lunch",
 		Split:     2,
 	}
@@ -53,9 +53,9 @@ func TestTransaction_DomainRoundTrip(t *testing.T) {
 }
 
 func TestToTransactions(t *testing.T) {
-	in := []model.Transaction{
+	in := []shared.Transaction{
 		sampleDomainTransaction(),
-		{ID: "txn-2", Direction: model.Inflow, Amount: 500},
+		{ID: "txn-2", Direction: shared.Inflow, Amount: 500},
 	}
 
 	out := ToTransactions(in)
@@ -82,12 +82,12 @@ func TestToTransactions_EmptyIsNonNil(t *testing.T) {
 func TestDomainTransactions(t *testing.T) {
 	in := []Transaction{
 		ToTransaction(sampleDomainTransaction()),
-		{ID: "txn-2", Direction: model.Inflow, Amount: 500},
+		{ID: "txn-2", Direction: shared.Inflow, Amount: 500},
 	}
 
 	out := DomainTransactions(in)
 
-	want := []model.Transaction{
+	want := []shared.Transaction{
 		in[0].Domain(),
 		in[1].Domain(),
 	}

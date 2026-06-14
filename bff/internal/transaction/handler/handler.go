@@ -8,30 +8,32 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/kjj1998/kinji/bff/internal/model"
-	"github.com/kjj1998/kinji/bff/internal/service"
+	platformhttp "github.com/kjj1998/kinji/bff/internal/platform/http"
+	"github.com/kjj1998/kinji/bff/internal/shared"
+	"github.com/kjj1998/kinji/bff/internal/transaction/domain"
+	transactionsvc "github.com/kjj1998/kinji/bff/internal/transaction/service"
 )
 
 // TransactionHandler handles HTTP requests for transactions.
 type TransactionHandler struct {
-	svc service.TransactionService
+	svc transactionsvc.TransactionService
 }
 
 // NewTransactionHandler returns a TransactionHandler backed by svc.
-func NewTransactionHandler(svc service.TransactionService) *TransactionHandler {
+func NewTransactionHandler(svc transactionsvc.TransactionService) *TransactionHandler {
 	return &TransactionHandler{svc: svc}
 }
 
 // GetMonthlyTransactions writes the user's monthly transactions as JSON, selected by the
 // "month" and "year" query parameters.
 func (h *TransactionHandler) GetMonthlyTransactions(w http.ResponseWriter, r *http.Request) {
-	id, ok := requireUserId(w, r)
+	id, ok := platformhttp.RequireUserId(w, r)
 	if !ok {
 		return
 	}
 
 	q := r.URL.Query()
-	month, year, ok := parseMonthYear(w, q.Get("month"), q.Get("year"))
+	month, year, ok := platformhttp.ParseMonthYear(w, q.Get("month"), q.Get("year"))
 	if !ok {
 		return
 	}
@@ -40,29 +42,29 @@ func (h *TransactionHandler) GetMonthlyTransactions(w http.ResponseWriter, r *ht
 
 	if err != nil {
 		slog.ErrorContext(r.Context(), "get monthly transactions", "error", err)
-		writeError(w, http.StatusInternalServerError, "failed to get monthly transactions")
+		platformhttp.WriteError(w, http.StatusInternalServerError, "failed to get monthly transactions")
 		return
 	}
-	writeJSON(w, http.StatusOK, ToTransactions(transactions))
+	platformhttp.WriteJSON(w, http.StatusOK, ToTransactions(transactions))
 }
 
 // ImportStatement parses an uploaded PDF bank statement and
 // extracts and categorizes its transactions for the user.
 func (h *TransactionHandler) ImportStatement(w http.ResponseWriter, r *http.Request) {
-	userId, ok := requireUserId(w, r)
+	userId, ok := platformhttp.RequireUserId(w, r)
 	if !ok {
 		return
 	}
 
 	r.Body = http.MaxBytesReader(w, r.Body, 20<<20)
 	if err := r.ParseMultipartForm(10 << 20); err != nil {
-		writeError(w, http.StatusBadRequest, "invalid multipart form")
+		platformhttp.WriteError(w, http.StatusBadRequest, "invalid multipart form")
 		return
 	}
 
 	file, _, err := r.FormFile("statement")
 	if err != nil {
-		writeError(w, http.StatusBadRequest, "missing statement file")
+		platformhttp.WriteError(w, http.StatusBadRequest, "missing statement file")
 		return
 	}
 	defer file.Close()
@@ -103,14 +105,14 @@ func (h *TransactionHandler) ImportStatement(w http.ResponseWriter, r *http.Requ
 // PDF and bad-input problems while hiding internal failures.
 func importErrorMessage(err error) string {
 	switch {
-	case errors.Is(err, model.ErrPDFPasswordRequired):
+	case errors.Is(err, domain.ErrPDFPasswordRequired):
 		return "pdf password required"
-	case errors.Is(err, model.ErrPDFWrongPassword):
+	case errors.Is(err, domain.ErrPDFWrongPassword):
 		return "wrong pdf password given"
-	case errors.Is(err, model.ErrPDFCorrupt):
+	case errors.Is(err, domain.ErrPDFCorrupt):
 		return "invalid/corrupt pdf file"
 	}
-	var ce *service.ClientError
+	var ce *shared.ClientError
 	if errors.As(err, &ce) {
 		return ce.Error()
 	}
@@ -120,7 +122,7 @@ func importErrorMessage(err error) string {
 // SaveTransactions saves transactions that has been reviewed and
 // approved by the user into the database.
 func (h *TransactionHandler) SaveTransactions(w http.ResponseWriter, r *http.Request) {
-	userId, ok := requireUserId(w, r)
+	userId, ok := platformhttp.RequireUserId(w, r)
 	if !ok {
 		return
 	}
@@ -132,23 +134,23 @@ func (h *TransactionHandler) SaveTransactions(w http.ResponseWriter, r *http.Req
 	decoder := json.NewDecoder(r.Body)
 	decoder.DisallowUnknownFields()
 	if err := decoder.Decode(&transactions); err != nil {
-		writeError(w, http.StatusBadRequest, "invalid request body")
+		platformhttp.WriteError(w, http.StatusBadRequest, "invalid request body")
 		return
 	}
 
 	saved, err := h.svc.SaveTransactions(r.Context(), userId, DomainTransactions(transactions))
 	if err != nil {
 		slog.ErrorContext(r.Context(), "save transactions", "error", err)
-		writeError(w, http.StatusInternalServerError, "failed to save transactions")
+		platformhttp.WriteError(w, http.StatusInternalServerError, "failed to save transactions")
 		return
 	}
 
-	writeJSON(w, http.StatusOK, ToTransactions(saved))
+	platformhttp.WriteJSON(w, http.StatusOK, ToTransactions(saved))
 }
 
 // GetPeriods retrieves the years and months where transaction data is available
 func (h *TransactionHandler) GetPeriods(w http.ResponseWriter, r *http.Request) {
-	userId, ok := requireUserId(w, r)
+	userId, ok := platformhttp.RequireUserId(w, r)
 	if !ok {
 		return
 	}
@@ -156,9 +158,9 @@ func (h *TransactionHandler) GetPeriods(w http.ResponseWriter, r *http.Request) 
 	periods, err := h.svc.GetPeriods(r.Context(), userId)
 	if err != nil {
 		slog.ErrorContext(r.Context(), "get periods", "error", err)
-		writeError(w, http.StatusInternalServerError, "failed to get periods")
+		platformhttp.WriteError(w, http.StatusInternalServerError, "failed to get periods")
 		return
 	}
 
-	writeJSON(w, http.StatusOK, ToPeriods(periods))
+	platformhttp.WriteJSON(w, http.StatusOK, ToPeriods(periods))
 }

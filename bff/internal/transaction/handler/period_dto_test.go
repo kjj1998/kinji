@@ -4,11 +4,11 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/kjj1998/kinji/bff/internal/model"
+	"github.com/kjj1998/kinji/bff/internal/transaction/domain"
 )
 
 func TestToPeriod(t *testing.T) {
-	in := model.Period{Year: 2026, Months: []int{1, 6, 12}}
+	in := domain.Period{Year: 2026, Months: []int{1, 6, 12}}
 
 	out := ToPeriod(in)
 
@@ -21,7 +21,7 @@ func TestToPeriod(t *testing.T) {
 }
 
 func TestToPeriods(t *testing.T) {
-	in := []model.Period{
+	in := []domain.Period{
 		{Year: 2025, Months: []int{11, 12}},
 		{Year: 2026, Months: []int{1}},
 	}
