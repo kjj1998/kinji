@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/kjj1998/kinji/bff/internal/model"
+	"github.com/kjj1998/kinji/bff/internal/summary/domain"
 )
 
 // summaryTopN is the number of top merchants/categories fetched from the
@@ -13,21 +13,21 @@ const summaryTopN = 5
 
 // SummaryService is the use-case API for a user's monthly spending summary.
 type SummaryService interface {
-	GenerateMonthlySummary(ctx context.Context, userId, month, year string) (*model.MonthlySummary, error)
+	GenerateMonthlySummary(ctx context.Context, userId, month, year string) (*domain.MonthlySummary, error)
 }
 
 type summaryService struct {
 	repo TransactionRepository
-	calc model.SummaryCalculator
+	calc domain.SummaryCalculator
 }
 
 func NewSummaryService(repo TransactionRepository) SummaryService {
-	return &summaryService{repo: repo, calc: model.NewSummaryCalculator()}
+	return &summaryService{repo: repo, calc: domain.NewSummaryCalculator()}
 }
 
 // GenerateMonthlySummary gathers the raw monthly data from the repository and
 // hands it to the domain SummaryCalculator. It performs no calculation itself.
-func (s *summaryService) GenerateMonthlySummary(ctx context.Context, userId, month, year string) (*model.MonthlySummary, error) {
+func (s *summaryService) GenerateMonthlySummary(ctx context.Context, userId, month, year string) (*domain.MonthlySummary, error) {
 	currentMonth, err := s.repo.GetMonthlyTransactions(ctx, userId, month, year)
 	if err != nil {
 		return nil, fmt.Errorf("get current month transactions for %s-%s, user id %s: %w", month, year, userId, err)
@@ -58,7 +58,7 @@ func (s *summaryService) GenerateMonthlySummary(ctx context.Context, userId, mon
 		return nil, fmt.Errorf("get category spending for %s-%s: %w", month, year, err)
 	}
 
-	return s.calc.Calculate(model.SummaryInput{
+	return s.calc.Calculate(domain.SummaryInput{
 		Month:                month,
 		Year:                 year,
 		CurrentMonth:         currentMonth,
