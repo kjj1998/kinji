@@ -10,8 +10,9 @@ import (
 	"log/slog"
 
 	"github.com/anthropics/anthropic-sdk-go"
-	"github.com/kjj1998/kinji/bff/internal/model"
-	"github.com/kjj1998/kinji/bff/internal/service"
+	"github.com/kjj1998/kinji/bff/internal/shared"
+	"github.com/kjj1998/kinji/bff/internal/transaction/domain"
+	"github.com/kjj1998/kinji/bff/internal/transaction/service"
 	"github.com/pdfcpu/pdfcpu/pkg/api"
 	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu"
 	pdfmodel "github.com/pdfcpu/pdfcpu/pkg/pdfcpu/model"
@@ -34,13 +35,13 @@ func NewParser(model string) service.StatementParser {
 
 // Extract decrypts/validates the statement PDF, runs the LLM extraction, and
 // returns the raw statement rows (with running balances). Balance reconciliation
-// is the domain's responsibility (see model.Statement), so it is not done here.
+// is the domain's responsibility (see domain.Statement), so it is not done here.
 func (p *parser) Extract(
 	ctx context.Context,
 	pdf []byte,
 	password string,
 	onProgress func(stage string),
-) ([]model.StatementLine, error) {
+) ([]domain.StatementLine, error) {
 	onProgress("validating")
 	pdf, err := preparePDF(pdf, password)
 	if err != nil {
@@ -57,18 +58,18 @@ func (p *parser) Extract(
 		return nil, err
 	}
 
-	lines := make([]model.StatementLine, 0, len(input.Transactions))
+	lines := make([]domain.StatementLine, 0, len(input.Transactions))
 	for _, t := range input.Transactions {
-		cat, err := model.ParseCategory(t.Category)
+		cat, err := shared.ParseCategory(t.Category)
 		if err != nil {
 			return nil, fmt.Errorf("row for %q: %w", t.Merchant, err)
 		}
-		dir, err := model.ParseDirection(t.Direction)
+		dir, err := shared.ParseDirection(t.Direction)
 		if err != nil {
 			return nil, fmt.Errorf("row for %q: %w", t.Merchant, err)
 		}
-		lines = append(lines, model.StatementLine{
-			Txn: model.Transaction{
+		lines = append(lines, domain.StatementLine{
+			Txn: shared.Transaction{
 				Date:      t.Date,
 				Merchant:  t.Merchant,
 				Category:  cat,
@@ -89,9 +90,9 @@ func preparePDF(pdf []byte, password string) ([]byte, error) {
 	if password == "" {
 		if err := api.Validate(bytes.NewReader(pdf), pdfmodel.NewDefaultConfiguration()); err != nil {
 			if errors.Is(err, pdfcpu.ErrWrongPassword) {
-				return nil, model.ErrPDFPasswordRequired
+				return nil, domain.ErrPDFPasswordRequired
 			}
-			return nil, fmt.Errorf("%w: %v", model.ErrPDFCorrupt, err)
+			return nil, fmt.Errorf("%w: %v", domain.ErrPDFCorrupt, err)
 		}
 		return pdf, nil
 	}
@@ -101,9 +102,9 @@ func preparePDF(pdf []byte, password string) ([]byte, error) {
 	conf.UserPW = password
 	if err := api.Decrypt(bytes.NewReader(pdf), &out, conf); err != nil {
 		if errors.Is(err, pdfcpu.ErrWrongPassword) {
-			return nil, model.ErrPDFWrongPassword
+			return nil, domain.ErrPDFWrongPassword
 		}
-		return nil, fmt.Errorf("%w: %v", model.ErrPDFCorrupt, err)
+		return nil, fmt.Errorf("%w: %v", domain.ErrPDFCorrupt, err)
 	}
 	return out.Bytes(), nil
 }
