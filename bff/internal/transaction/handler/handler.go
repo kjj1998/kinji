@@ -11,6 +11,7 @@ import (
 	platformhttp "github.com/kjj1998/kinji/bff/internal/platform/http"
 	"github.com/kjj1998/kinji/bff/internal/shared"
 	"github.com/kjj1998/kinji/bff/internal/transaction/domain"
+	"github.com/kjj1998/kinji/bff/internal/transaction/dto"
 	transactionsvc "github.com/kjj1998/kinji/bff/internal/transaction/service"
 	webdto "github.com/kjj1998/kinji/bff/internal/shared/webdto"
 )
@@ -163,5 +164,5 @@ func (h *TransactionHandler) GetPeriods(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	platformhttp.WriteJSON(w, http.StatusOK, ToPeriods(periods))
+	platformhttp.WriteJSON(w, http.StatusOK, dto.ToPeriods(periods))
 }

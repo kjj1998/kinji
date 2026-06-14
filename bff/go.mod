@@ -3,17 +3,17 @@ module github.com/kjj1998/kinji/bff
 go 1.25.0
 
 require (
+	github.com/anthropics/anthropic-sdk-go v1.45.0
+	github.com/google/uuid v1.6.0
 	github.com/pdfcpu/pdfcpu v0.12.1
 	modernc.org/sqlite v1.50.1
 )
 
 require (
-	github.com/anthropics/anthropic-sdk-go v1.45.0 // indirect
 	github.com/bahlo/generic-list-go v0.2.0 // indirect
 	github.com/buger/jsonparser v1.1.2 // indirect
 	github.com/clipperhouse/uax29/v2 v2.7.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
-	github.com/google/uuid v1.6.0 // indirect
 	github.com/hhrutter/lzw v1.0.0 // indirect
 	github.com/hhrutter/pkcs7 v0.2.2 // indirect
 	github.com/hhrutter/tiff v1.0.3 // indirect

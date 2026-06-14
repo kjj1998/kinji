@@ -1,4 +1,4 @@
-package handler
+package dto
 
 import "github.com/kjj1998/kinji/bff/internal/transaction/domain"
 

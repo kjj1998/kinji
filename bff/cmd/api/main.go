@@ -9,11 +9,10 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/kjj1998/kinji/bff/internal/config"
-	"github.com/kjj1998/kinji/bff/internal/handler"
-	"github.com/kjj1998/kinji/bff/internal/parser"
-	"github.com/kjj1998/kinji/bff/internal/service"
-	"github.com/kjj1998/kinji/bff/internal/store"
+	"github.com/kjj1998/kinji/bff/internal/platform/config"
+	"github.com/kjj1998/kinji/bff/internal/platform/database"
+	"github.com/kjj1998/kinji/bff/internal/server"
+	"github.com/kjj1998/kinji/bff/internal/transaction/parser"
 )
 
 func main() {
@@ -22,19 +21,16 @@ func main() {
 
 	cfg := config.Load()
 
-	var repo service.TransactionRepository
-
-	db, err := store.NewClient(cfg.SQLitePath)
+	db, err := database.NewClient(cfg.SQLitePath)
 	if err != nil {
 		slog.Error("failed to create sqlite client",
 			"error", err,
 			"path", cfg.SQLitePath)
 		os.Exit(1)
 	}
-	repo = store.NewRepository(db)
 	parser := parser.NewParser(cfg.AnthropicModel)
 
-	h := handler.New(repo, parser, cfg.CORSOrigin)
+	h := server.New(db, parser, cfg.CORSOrigin)
 
 	srv := &http.Server{
 		Addr:         ":" + cfg.Port,

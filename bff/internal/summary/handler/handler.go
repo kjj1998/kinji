@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	platformhttp "github.com/kjj1998/kinji/bff/internal/platform/http"
+	"github.com/kjj1998/kinji/bff/internal/summary/dto"
 	"github.com/kjj1998/kinji/bff/internal/summary/service"
 )
 
@@ -32,5 +33,5 @@ func (h *SummaryHandler) Summary(w http.ResponseWriter, r *http.Request) {
 		platformhttp.WriteError(w, http.StatusInternalServerError, "failed to calculate monthly summary")
 		return
 	}
-	platformhttp.WriteJSON(w, http.StatusOK, ToTransactionSummary(summary))
+	platformhttp.WriteJSON(w, http.StatusOK, dto.ToTransactionSummary(summary))
 }

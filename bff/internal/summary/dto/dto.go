@@ -1,9 +1,9 @@
-package handler
+package dto
 
 import (
 	"github.com/kjj1998/kinji/bff/internal/shared"
-	"github.com/kjj1998/kinji/bff/internal/summary/domain"
 	webdto "github.com/kjj1998/kinji/bff/internal/shared/webdto"
+	"github.com/kjj1998/kinji/bff/internal/summary/domain"
 )
 
 // View policy: how many ranked items the monthly summary screen shows.
@@ -53,7 +53,7 @@ type TransactionSummary struct {
 	DailyTrend         []DateSpending           `json:"dailyTrend"`
 	BiggestChanges     []CategorySpendingChange `json:"biggestChanges"`
 	TopMerchants       []Merchant               `json:"topMerchants"`
-	RecentTransactions []webdto.Transaction  `json:"recentTransactions"`
+	RecentTransactions []webdto.Transaction     `json:"recentTransactions"`
 }
 
 // ToTransactionSummary maps the domain read-model to its wire representation,
