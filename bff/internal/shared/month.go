@@ -1,4 +1,4 @@
-package model
+package shared
 
 import (
 	"fmt"
@@ -40,3 +40,13 @@ func (m Month) Previous() Month { return m.AddMonths(-1) }
 
 // Key returns the canonical "YYYY-MM" identifier for the month.
 func (m Month) Key() string { return m.start.Format(monthLayout) }
+
+const dateLayout = "2006-01-02"
+
+// GetMonthRangeDateStrings returns the first and last day of the given month as
+// "2006-01-02" strings, for use as SQL date-range bounds.
+func GetMonthRangeDateStrings(month, year string) (string, string) {
+	m, _ := ParseMonth(month, year)
+	start, end := m.Range()
+	return start.Format(dateLayout), end.Format(dateLayout)
+}
