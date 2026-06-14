@@ -1,6 +1,10 @@
-package model
+package domain
 
-import "time"
+import (
+	"time"
+
+	"github.com/kjj1998/kinji/bff/internal/shared"
+)
 
 // ValueAndChange pairs a current value with its change relative to a prior
 // period (e.g. this month's total spent and the delta from last month).
@@ -27,19 +31,19 @@ func NewValueAndChange[T int | float64](values []T) ValueAndChange[T] {
 type MerchantSpending struct {
 	Name     string
 	Amount   int
-	Category Category
+	Category shared.Category
 }
 
 // CategorySpending is the total outflow within a single category over a period.
 type CategorySpending struct {
-	Category Category
+	Category shared.Category
 	Amount   int
 }
 
 // CategorySpendingChange describes how spending in a category moved between two
 // periods. IsNew reports that the category had no spending in the prior period.
 type CategorySpendingChange struct {
-	Category         Category
+	Category         shared.Category
 	Amount           int
 	Change           int
 	PercentageChange int

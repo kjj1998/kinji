@@ -1,4 +1,4 @@
-package model
+package domain
 
 import (
 	"cmp"
@@ -6,6 +6,8 @@ import (
 	"math"
 	"slices"
 	"time"
+
+	"github.com/kjj1998/kinji/bff/internal/shared"
 )
 
 const (
@@ -28,14 +30,14 @@ type MonthlySummary struct {
 	DailyTrend         []DaySpending
 	BiggestChanges     []CategorySpendingChange
 	TopMerchants       []MerchantSpending
-	RecentTransactions []Transaction
+	RecentTransactions []shared.Transaction
 }
 
 // SummaryInput is the raw, repository-sourced data the calculator needs to build
 // a MonthlySummary. The application layer gathers it; the calculator owns the math.
 type SummaryInput struct {
 	Month, Year          string
-	CurrentMonth         []Transaction
+	CurrentMonth         []shared.Transaction
 	TotalIncome          ValueAndChange[int]
 	TotalSpent           ValueAndChange[int]
 	NetSavings           ValueAndChange[int]
@@ -43,8 +45,8 @@ type SummaryInput struct {
 	TopMerchants         []MerchantSpending
 	TopCategories        []CategorySpending
 	MonthlyExpenses      map[string]int // keyed "2006-01"
-	CurCategorySpending  map[Category]int
-	PrevCategorySpending map[Category]int
+	CurCategorySpending  map[shared.Category]int
+	PrevCategorySpending map[shared.Category]int
 }
 
 // SummaryCalculator is a stateless domain service that turns raw monthly data
@@ -86,7 +88,7 @@ func (c SummaryCalculator) Calculate(in SummaryInput) (*MonthlySummary, error) {
 // is no outflow to describe.
 func (SummaryCalculator) Narrative(
 	difference float64,
-	topTransaction *Transaction,
+	topTransaction *shared.Transaction,
 	hasPrevMonth bool,
 	netSavings int,
 	savingsRate float64,
@@ -114,7 +116,7 @@ func (SummaryCalculator) Narrative(
 
 // DailySpendingTrend sums outflows into seven Monday-to-Sunday weekday buckets.
 // Unparseable dates and inflows are ignored.
-func (SummaryCalculator) DailySpendingTrend(txns []Transaction) []DaySpending {
+func (SummaryCalculator) DailySpendingTrend(txns []shared.Transaction) []DaySpending {
 	totals := make(map[time.Weekday]int)
 	for _, t := range txns {
 		if t.IsInflow() {
@@ -142,8 +144,8 @@ func (SummaryCalculator) DailySpendingTrend(txns []Transaction) []DaySpending {
 // between the previous and current period. With a prior baseline it sorts by the
 // magnitude of percentage change; with no baseline it falls back to raw amount.
 // The full ranked list is returned; the caller decides how many to show.
-func (SummaryCalculator) CategorySpendingChanges(cur, prev map[Category]int) []CategorySpendingChange {
-	categories := make(map[Category]struct{}, len(cur)+len(prev))
+func (SummaryCalculator) CategorySpendingChanges(cur, prev map[shared.Category]int) []CategorySpendingChange {
+	categories := make(map[shared.Category]struct{}, len(cur)+len(prev))
 	for cat := range cur {
 		categories[cat] = struct{}{}
 	}
@@ -183,12 +185,12 @@ func (SummaryCalculator) CategorySpendingChanges(cur, prev map[Category]int) []C
 
 // RecentTransactions returns the transactions sorted by date, most recent first.
 // The full slice is returned (never nil); the caller decides how many to show.
-func (SummaryCalculator) RecentTransactions(txns []Transaction) []Transaction {
+func (SummaryCalculator) RecentTransactions(txns []shared.Transaction) []shared.Transaction {
 	sorted := slices.Clone(txns)
 	if sorted == nil {
-		sorted = []Transaction{}
+		sorted = []shared.Transaction{}
 	}
-	slices.SortFunc(sorted, func(a, b Transaction) int {
+	slices.SortFunc(sorted, func(a, b shared.Transaction) int {
 		return cmp.Compare(b.Date, a.Date)
 	})
 	return sorted
@@ -197,7 +199,7 @@ func (SummaryCalculator) RecentTransactions(txns []Transaction) []Transaction {
 // MonthlyTrend builds the trailing six-month outflow series ending at the given
 // month, keyed by the first instant of each month. Missing months default to 0.
 func (SummaryCalculator) MonthlyTrend(month, year string, monthlyExpenses map[string]int) ([]MonthSpending, error) {
-	to, err := ParseMonth(month, year)
+	to, err := shared.ParseMonth(month, year)
 	if err != nil {
 		return nil, err
 	}
@@ -214,8 +216,8 @@ func (SummaryCalculator) MonthlyTrend(month, year string, monthlyExpenses map[st
 }
 
 // TopOutflow returns the single largest outflow, or nil when there are none.
-func (SummaryCalculator) TopOutflow(txns []Transaction) *Transaction {
-	var top *Transaction
+func (SummaryCalculator) TopOutflow(txns []shared.Transaction) *shared.Transaction {
+	var top *shared.Transaction
 	for i := range txns {
 		t := &txns[i]
 		if !t.IsOutflow() {
