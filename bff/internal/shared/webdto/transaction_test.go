@@ -1,4 +1,4 @@
-package handler
+package webdto
 
 import (
 	"reflect"

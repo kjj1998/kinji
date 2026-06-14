@@ -3,7 +3,7 @@ package handler
 import (
 	"github.com/kjj1998/kinji/bff/internal/shared"
 	"github.com/kjj1998/kinji/bff/internal/summary/domain"
-	txhandler "github.com/kjj1998/kinji/bff/internal/transaction/handler"
+	webdto "github.com/kjj1998/kinji/bff/internal/shared/webdto"
 )
 
 // View policy: how many ranked items the monthly summary screen shows.
@@ -53,7 +53,7 @@ type TransactionSummary struct {
 	DailyTrend         []DateSpending           `json:"dailyTrend"`
 	BiggestChanges     []CategorySpendingChange `json:"biggestChanges"`
 	TopMerchants       []Merchant               `json:"topMerchants"`
-	RecentTransactions []txhandler.Transaction  `json:"recentTransactions"`
+	RecentTransactions []webdto.Transaction  `json:"recentTransactions"`
 }
 
 // ToTransactionSummary maps the domain read-model to its wire representation,
@@ -75,7 +75,7 @@ func ToTransactionSummary(s *domain.MonthlySummary) *TransactionSummary {
 		DailyTrend:         toDailyTrend(s.DailyTrend),
 		BiggestChanges:     toCategorySpendingChanges(capSlice(s.BiggestChanges, maxBiggestChanges)),
 		TopMerchants:       toMerchants(s.TopMerchants),
-		RecentTransactions: txhandler.ToTransactions(capSlice(s.RecentTransactions, maxRecentTransactions)),
+		RecentTransactions: webdto.ToTransactions(capSlice(s.RecentTransactions, maxRecentTransactions)),
 	}
 }
 

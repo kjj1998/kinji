@@ -1,4 +1,4 @@
-package handler
+package webdto
 
 import "github.com/kjj1998/kinji/bff/internal/shared"
 

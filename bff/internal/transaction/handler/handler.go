@@ -12,6 +12,7 @@ import (
 	"github.com/kjj1998/kinji/bff/internal/shared"
 	"github.com/kjj1998/kinji/bff/internal/transaction/domain"
 	transactionsvc "github.com/kjj1998/kinji/bff/internal/transaction/service"
+	webdto "github.com/kjj1998/kinji/bff/internal/shared/webdto"
 )
 
 // TransactionHandler handles HTTP requests for transactions.
@@ -45,7 +46,7 @@ func (h *TransactionHandler) GetMonthlyTransactions(w http.ResponseWriter, r *ht
 		platformhttp.WriteError(w, http.StatusInternalServerError, "failed to get monthly transactions")
 		return
 	}
-	platformhttp.WriteJSON(w, http.StatusOK, ToTransactions(transactions))
+	platformhttp.WriteJSON(w, http.StatusOK, webdto.ToTransactions(transactions))
 }
 
 // ImportStatement parses an uploaded PDF bank statement and
@@ -93,7 +94,7 @@ func (h *TransactionHandler) ImportStatement(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	data, err := json.Marshal(ToTransactions(transactions))
+	data, err := json.Marshal(webdto.ToTransactions(transactions))
 	if err != nil {
 		sendError("failed to encode result")
 		return
@@ -127,7 +128,7 @@ func (h *TransactionHandler) SaveTransactions(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	var transactions []Transaction
+	var transactions []webdto.Transaction
 
 	r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
 
@@ -138,14 +139,14 @@ func (h *TransactionHandler) SaveTransactions(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	saved, err := h.svc.SaveTransactions(r.Context(), userId, DomainTransactions(transactions))
+	saved, err := h.svc.SaveTransactions(r.Context(), userId, webdto.DomainTransactions(transactions))
 	if err != nil {
 		slog.ErrorContext(r.Context(), "save transactions", "error", err)
 		platformhttp.WriteError(w, http.StatusInternalServerError, "failed to save transactions")
 		return
 	}
 
-	platformhttp.WriteJSON(w, http.StatusOK, ToTransactions(saved))
+	platformhttp.WriteJSON(w, http.StatusOK, webdto.ToTransactions(saved))
 }
 
 // GetPeriods retrieves the years and months where transaction data is available
