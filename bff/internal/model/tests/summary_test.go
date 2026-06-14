@@ -1,17 +1,19 @@
-package model
+package tests
 
 import (
 	"reflect"
 	"testing"
 	"time"
+
+	"github.com/kjj1998/kinji/bff/internal/model"
 )
 
 func TestNarrative(t *testing.T) {
-	var c SummaryCalculator
+	var c model.SummaryCalculator
 	tests := []struct {
 		name           string
 		difference     float64
-		topTransaction *Transaction
+		topTransaction *model.Transaction
 		hasPrevMonth   bool
 		netSavings     int
 		savingsRate    float64
@@ -24,7 +26,7 @@ func TestNarrative(t *testing.T) {
 		},
 		{
 			name:           "hasPrevMonth is false",
-			topTransaction: &Transaction{Category: CategoryEntertainment, Amount: 50000},
+			topTransaction: &model.Transaction{Category: model.CategoryEntertainment, Amount: 50000},
 			hasPrevMonth:   false,
 			netSavings:     145000,
 			savingsRate:    43.4,
@@ -33,7 +35,7 @@ func TestNarrative(t *testing.T) {
 		{
 			name:           "difference > 0",
 			difference:     96.45,
-			topTransaction: &Transaction{Category: CategoryEntertainment, Amount: 50000},
+			topTransaction: &model.Transaction{Category: model.CategoryEntertainment, Amount: 50000},
 			hasPrevMonth:   true,
 			netSavings:     145000,
 			savingsRate:    43.4,
@@ -42,7 +44,7 @@ func TestNarrative(t *testing.T) {
 		{
 			name:           "difference < 0",
 			difference:     -96.45,
-			topTransaction: &Transaction{Category: CategoryEntertainment, Amount: 50000},
+			topTransaction: &model.Transaction{Category: model.CategoryEntertainment, Amount: 50000},
 			hasPrevMonth:   true,
 			netSavings:     145000,
 			savingsRate:    43.4,
@@ -61,52 +63,52 @@ func TestNarrative(t *testing.T) {
 }
 
 func TestDailySpendingTrend(t *testing.T) {
-	var c SummaryCalculator
-	zeroWeek := func(set map[time.Weekday]int) []DaySpending {
+	var c model.SummaryCalculator
+	zeroWeek := func(set map[time.Weekday]int) []model.DaySpending {
 		week := []time.Weekday{
 			time.Monday, time.Tuesday, time.Wednesday,
 			time.Thursday, time.Friday, time.Saturday, time.Sunday,
 		}
-		out := make([]DaySpending, len(week))
+		out := make([]model.DaySpending, len(week))
 		for i, d := range week {
-			out[i] = DaySpending{Weekday: d, Amount: set[d]}
+			out[i] = model.DaySpending{Weekday: d, Amount: set[d]}
 		}
 		return out
 	}
 
 	tests := []struct {
 		name     string
-		txs      []Transaction
-		expected []DaySpending
+		txs      []model.Transaction
+		expected []model.DaySpending
 	}{
 		{
 			name: "skips INFLOW transactions",
-			txs: []Transaction{
-				{Date: "2026-06-08", Amount: 1000, Direction: Inflow}, // Monday
-				{Date: "2026-06-08", Amount: 500, Direction: Outflow}, // Monday
+			txs: []model.Transaction{
+				{Date: "2026-06-08", Amount: 1000, Direction: model.Inflow}, // Monday
+				{Date: "2026-06-08", Amount: 500, Direction: model.Outflow}, // Monday
 			},
 			expected: zeroWeek(map[time.Weekday]int{time.Monday: 500}),
 		},
 		{
 			name: "skips unparseable dates",
-			txs: []Transaction{
-				{Date: "not-a-date", Amount: 999, Direction: Outflow},
-				{Date: "", Amount: 999, Direction: Outflow},
-				{Date: "2026-06-10", Amount: 300, Direction: Outflow}, // Wednesday
+			txs: []model.Transaction{
+				{Date: "not-a-date", Amount: 999, Direction: model.Outflow},
+				{Date: "", Amount: 999, Direction: model.Outflow},
+				{Date: "2026-06-10", Amount: 300, Direction: model.Outflow}, // Wednesday
 			},
 			expected: zeroWeek(map[time.Weekday]int{time.Wednesday: 300}),
 		},
 		{
 			name: "groups by weekday Mon to Sun and sums amounts",
-			txs: []Transaction{
-				{Date: "2026-06-08", Amount: 100, Direction: Outflow}, // Monday
-				{Date: "2026-06-15", Amount: 200, Direction: Outflow}, // Monday (next week)
-				{Date: "2026-06-09", Amount: 50, Direction: Outflow},  // Tuesday
-				{Date: "2026-06-10", Amount: 60, Direction: Outflow},  // Wednesday
-				{Date: "2026-06-11", Amount: 70, Direction: Outflow},  // Thursday
-				{Date: "2026-06-12", Amount: 80, Direction: Outflow},  // Friday
-				{Date: "2026-06-13", Amount: 90, Direction: Outflow},  // Saturday
-				{Date: "2026-06-14", Amount: 110, Direction: Outflow}, // Sunday
+			txs: []model.Transaction{
+				{Date: "2026-06-08", Amount: 100, Direction: model.Outflow}, // Monday
+				{Date: "2026-06-15", Amount: 200, Direction: model.Outflow}, // Monday (next week)
+				{Date: "2026-06-09", Amount: 50, Direction: model.Outflow},  // Tuesday
+				{Date: "2026-06-10", Amount: 60, Direction: model.Outflow},  // Wednesday
+				{Date: "2026-06-11", Amount: 70, Direction: model.Outflow},  // Thursday
+				{Date: "2026-06-12", Amount: 80, Direction: model.Outflow},  // Friday
+				{Date: "2026-06-13", Amount: 90, Direction: model.Outflow},  // Saturday
+				{Date: "2026-06-14", Amount: 110, Direction: model.Outflow}, // Sunday
 			},
 			expected: zeroWeek(map[time.Weekday]int{
 				time.Monday: 300, time.Tuesday: 50, time.Wednesday: 60,
@@ -131,78 +133,78 @@ func TestDailySpendingTrend(t *testing.T) {
 }
 
 func TestCategorySpendingChanges(t *testing.T) {
-	var c SummaryCalculator
+	var c model.SummaryCalculator
 	tests := []struct {
 		name     string
-		cur      map[Category]int
-		prev     map[Category]int
-		expected []CategorySpendingChange
+		cur      map[model.Category]int
+		prev     map[model.Category]int
+		expected []model.CategorySpendingChange
 	}{
 		{
 			name: "IsNew when prev is zero",
-			cur: map[Category]int{
-				CategoryFood:      100,
-				CategoryTransport: 200,
+			cur: map[model.Category]int{
+				model.CategoryFood:      100,
+				model.CategoryTransport: 200,
 			},
-			prev: map[Category]int{
-				CategoryFood: 50,
+			prev: map[model.Category]int{
+				model.CategoryFood: 50,
 			},
-			expected: []CategorySpendingChange{
-				{Category: CategoryFood, Amount: 100, Change: 50, PercentageChange: 100, IsNew: false},
-				{Category: CategoryTransport, Amount: 200, Change: 200, PercentageChange: 0, IsNew: true},
+			expected: []model.CategorySpendingChange{
+				{Category: model.CategoryFood, Amount: 100, Change: 50, PercentageChange: 100, IsNew: false},
+				{Category: model.CategoryTransport, Amount: 200, Change: 200, PercentageChange: 0, IsNew: true},
 			},
 		},
 		{
 			name: "no baseline falls back to sort by amount",
-			cur: map[Category]int{
-				CategoryFood:      100,
-				CategoryTransport: 300,
-				CategoryShopping:  200,
+			cur: map[model.Category]int{
+				model.CategoryFood:      100,
+				model.CategoryTransport: 300,
+				model.CategoryShopping:  200,
 			},
-			prev: map[Category]int{},
-			expected: []CategorySpendingChange{
-				{Category: CategoryTransport, Amount: 300, Change: 300, PercentageChange: 0, IsNew: true},
-				{Category: CategoryShopping, Amount: 200, Change: 200, PercentageChange: 0, IsNew: true},
-				{Category: CategoryFood, Amount: 100, Change: 100, PercentageChange: 0, IsNew: true},
+			prev: map[model.Category]int{},
+			expected: []model.CategorySpendingChange{
+				{Category: model.CategoryTransport, Amount: 300, Change: 300, PercentageChange: 0, IsNew: true},
+				{Category: model.CategoryShopping, Amount: 200, Change: 200, PercentageChange: 0, IsNew: true},
+				{Category: model.CategoryFood, Amount: 100, Change: 100, PercentageChange: 0, IsNew: true},
 			},
 		},
 		{
 			name: "with baseline sorts by absolute percentage change",
-			cur: map[Category]int{
-				CategoryFood:      10,
-				CategoryTransport: 100,
-				CategoryShopping:  100,
+			cur: map[model.Category]int{
+				model.CategoryFood:      10,
+				model.CategoryTransport: 100,
+				model.CategoryShopping:  100,
 			},
-			prev: map[Category]int{
-				CategoryFood:      100,
-				CategoryTransport: 50,
-				CategoryShopping:  90,
+			prev: map[model.Category]int{
+				model.CategoryFood:      100,
+				model.CategoryTransport: 50,
+				model.CategoryShopping:  90,
 			},
-			expected: []CategorySpendingChange{
-				{Category: CategoryTransport, Amount: 100, Change: 50, PercentageChange: 100, IsNew: false},
-				{Category: CategoryFood, Amount: 10, Change: -90, PercentageChange: -90, IsNew: false},
-				{Category: CategoryShopping, Amount: 100, Change: 10, PercentageChange: 11, IsNew: false},
+			expected: []model.CategorySpendingChange{
+				{Category: model.CategoryTransport, Amount: 100, Change: 50, PercentageChange: 100, IsNew: false},
+				{Category: model.CategoryFood, Amount: 10, Change: -90, PercentageChange: -90, IsNew: false},
+				{Category: model.CategoryShopping, Amount: 100, Change: 10, PercentageChange: 11, IsNew: false},
 			},
 		},
 		{
 			name: "returns full ranked list (no truncation in domain)",
-			cur: map[Category]int{
-				CategoryFood:      200,
-				CategoryTransport: 150,
-				CategoryShopping:  130,
-				CategoryHealth:    110,
+			cur: map[model.Category]int{
+				model.CategoryFood:      200,
+				model.CategoryTransport: 150,
+				model.CategoryShopping:  130,
+				model.CategoryHealth:    110,
 			},
-			prev: map[Category]int{
-				CategoryFood:      100,
-				CategoryTransport: 100,
-				CategoryShopping:  100,
-				CategoryHealth:    100,
+			prev: map[model.Category]int{
+				model.CategoryFood:      100,
+				model.CategoryTransport: 100,
+				model.CategoryShopping:  100,
+				model.CategoryHealth:    100,
 			},
-			expected: []CategorySpendingChange{
-				{Category: CategoryFood, Amount: 200, Change: 100, PercentageChange: 100, IsNew: false},
-				{Category: CategoryTransport, Amount: 150, Change: 50, PercentageChange: 50, IsNew: false},
-				{Category: CategoryShopping, Amount: 130, Change: 30, PercentageChange: 30, IsNew: false},
-				{Category: CategoryHealth, Amount: 110, Change: 10, PercentageChange: 10, IsNew: false},
+			expected: []model.CategorySpendingChange{
+				{Category: model.CategoryFood, Amount: 200, Change: 100, PercentageChange: 100, IsNew: false},
+				{Category: model.CategoryTransport, Amount: 150, Change: 50, PercentageChange: 50, IsNew: false},
+				{Category: model.CategoryShopping, Amount: 130, Change: 30, PercentageChange: 30, IsNew: false},
+				{Category: model.CategoryHealth, Amount: 110, Change: 10, PercentageChange: 10, IsNew: false},
 			},
 		},
 	}
@@ -218,7 +220,7 @@ func TestCategorySpendingChanges(t *testing.T) {
 }
 
 func TestRecentTransactions(t *testing.T) {
-	var c SummaryCalculator
+	var c model.SummaryCalculator
 
 	t.Run("nil returns empty slice not nil", func(t *testing.T) {
 		actual := c.RecentTransactions(nil)
@@ -231,12 +233,12 @@ func TestRecentTransactions(t *testing.T) {
 	})
 
 	t.Run("sorts by date descending", func(t *testing.T) {
-		txs := []Transaction{
+		txs := []model.Transaction{
 			{ID: "a", Date: "2026-06-01"},
 			{ID: "b", Date: "2026-06-10"},
 			{ID: "c", Date: "2026-06-05"},
 		}
-		expected := []Transaction{
+		expected := []model.Transaction{
 			{ID: "b", Date: "2026-06-10"},
 			{ID: "c", Date: "2026-06-05"},
 			{ID: "a", Date: "2026-06-01"},
@@ -248,12 +250,12 @@ func TestRecentTransactions(t *testing.T) {
 	})
 
 	t.Run("does not mutate original slice", func(t *testing.T) {
-		txs := []Transaction{
+		txs := []model.Transaction{
 			{ID: "a", Date: "2026-06-01"},
 			{ID: "b", Date: "2026-06-10"},
 			{ID: "c", Date: "2026-06-05"},
 		}
-		original := []Transaction{
+		original := []model.Transaction{
 			{ID: "a", Date: "2026-06-01"},
 			{ID: "b", Date: "2026-06-10"},
 			{ID: "c", Date: "2026-06-05"},
@@ -266,7 +268,7 @@ func TestRecentTransactions(t *testing.T) {
 }
 
 func TestMonthlyTrend(t *testing.T) {
-	var c SummaryCalculator
+	var c model.SummaryCalculator
 
 	t.Run("returns 6 month buckets ending at target month, missing months default to 0", func(t *testing.T) {
 		monthlyExpenses := map[string]int{
@@ -276,7 +278,7 @@ func TestMonthlyTrend(t *testing.T) {
 		firstOf := func(m time.Month) time.Time {
 			return time.Date(2026, m, 1, 0, 0, 0, 0, time.UTC)
 		}
-		expected := []MonthSpending{
+		expected := []model.MonthSpending{
 			{Month: firstOf(time.January), Amount: 0},
 			{Month: firstOf(time.February), Amount: 0},
 			{Month: firstOf(time.March), Amount: 0},
@@ -315,42 +317,42 @@ func TestMonthlyTrend(t *testing.T) {
 }
 
 func TestTopOutflow(t *testing.T) {
-	var c SummaryCalculator
+	var c model.SummaryCalculator
 	tests := []struct {
 		name     string
-		txs      []Transaction
-		expected *Transaction
+		txs      []model.Transaction
+		expected *model.Transaction
 	}{
 		{
 			name:     "empty returns nil",
-			txs:      []Transaction{},
+			txs:      []model.Transaction{},
 			expected: nil,
 		},
 		{
 			name: "ignores INFLOW transactions",
-			txs: []Transaction{
-				{ID: "a", Amount: 1000, Direction: Inflow},
-				{ID: "b", Amount: 200, Direction: Outflow},
+			txs: []model.Transaction{
+				{ID: "a", Amount: 1000, Direction: model.Inflow},
+				{ID: "b", Amount: 200, Direction: model.Outflow},
 			},
-			expected: &Transaction{ID: "b", Amount: 200, Direction: Outflow},
+			expected: &model.Transaction{ID: "b", Amount: 200, Direction: model.Outflow},
 		},
 		{
 			name: "all INFLOW returns nil",
-			txs: []Transaction{
-				{ID: "a", Amount: 1000, Direction: Inflow},
-				{ID: "b", Amount: 500, Direction: Inflow},
+			txs: []model.Transaction{
+				{ID: "a", Amount: 1000, Direction: model.Inflow},
+				{ID: "b", Amount: 500, Direction: model.Inflow},
 			},
 			expected: nil,
 		},
 		{
 			name: "picks max amount OUTFLOW",
-			txs: []Transaction{
-				{ID: "a", Amount: 100, Direction: Outflow},
-				{ID: "b", Amount: 900, Direction: Outflow},
-				{ID: "c", Amount: 500, Direction: Outflow},
-				{ID: "d", Amount: 2000, Direction: Inflow},
+			txs: []model.Transaction{
+				{ID: "a", Amount: 100, Direction: model.Outflow},
+				{ID: "b", Amount: 900, Direction: model.Outflow},
+				{ID: "c", Amount: 500, Direction: model.Outflow},
+				{ID: "d", Amount: 2000, Direction: model.Inflow},
 			},
-			expected: &Transaction{ID: "b", Amount: 900, Direction: Outflow},
+			expected: &model.Transaction{ID: "b", Amount: 900, Direction: model.Outflow},
 		},
 	}
 
@@ -377,9 +379,9 @@ func TestSafeDivide(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			actual := safeDivide(tc.a, tc.b)
+			actual := model.SafeDivide(tc.a, tc.b)
 			if actual != tc.expected {
-				t.Errorf("safeDivide(%d, %d) failed: expected %f, got %f", tc.a, tc.b, tc.expected, actual)
+				t.Errorf("SafeDivide(%d, %d) failed: expected %f, got %f", tc.a, tc.b, tc.expected, actual)
 			}
 		})
 	}
@@ -398,9 +400,9 @@ func TestPercentageChange(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			actual := percentageChange(tc.a, tc.b)
+			actual := model.PercentageChange(tc.a, tc.b)
 			if actual != tc.expected {
-				t.Errorf("percentageChange(%d, %d) failed: expected %f, got %f", tc.a, tc.b, tc.expected, actual)
+				t.Errorf("PercentageChange(%d, %d) failed: expected %f, got %f", tc.a, tc.b, tc.expected, actual)
 			}
 		})
 	}
@@ -419,9 +421,9 @@ func TestRoundTo2Dp(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			actual := roundTo2Dp(tc.input)
+			actual := model.RoundTo2Dp(tc.input)
 			if actual != tc.expected {
-				t.Errorf("roundTo2Dp(%f) failed: expected %f, got %f", tc.input, tc.expected, actual)
+				t.Errorf("RoundTo2Dp(%f) failed: expected %f, got %f", tc.input, tc.expected, actual)
 			}
 		})
 	}
@@ -435,7 +437,7 @@ func TestSortByAmountDesc_Struct(t *testing.T) {
 	got := []item{
 		{"a", 10}, {"b", 50}, {"c", 30}, {"d", 50},
 	}
-	sortByAmountDesc(got, func(i item) int { return i.amount })
+	model.SortByAmountDesc(got, func(i item) int { return i.amount })
 
 	// assert non-strictly descending by amount (don't assert order within the two 50s)
 	for i := 1; i < len(got); i++ {

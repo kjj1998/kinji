@@ -55,7 +55,7 @@ func NewSummaryCalculator() SummaryCalculator { return SummaryCalculator{} }
 
 // Calculate assembles the full monthly summary from the supplied input.
 func (c SummaryCalculator) Calculate(in SummaryInput) (*MonthlySummary, error) {
-	savingsRate := roundTo2Dp(safeDivide(in.NetSavings.Value, in.TotalIncome.Value) * 100)
+	savingsRate := RoundTo2Dp(SafeDivide(in.NetSavings.Value, in.TotalIncome.Value) * 100)
 
 	monthlyTrend, err := c.MonthlyTrend(in.Month, in.Year, in.MonthlyExpenses)
 	if err != nil {
@@ -109,7 +109,7 @@ func (SummaryCalculator) Narrative(
 	if difference < 0 {
 		direction = "less"
 	}
-	return fmt.Sprintf("You spent %.0f%% %s than last month. ", math.Abs(roundTo2Dp(difference/100)), direction) + suffix
+	return fmt.Sprintf("You spent %.0f%% %s than last month. ", math.Abs(RoundTo2Dp(difference/100)), direction) + suffix
 }
 
 // DailySpendingTrend sums outflows into seven Monday-to-Sunday weekday buckets.
@@ -159,18 +159,18 @@ func (SummaryCalculator) CategorySpendingChanges(cur, prev map[Category]int) []C
 			Category:         cat,
 			Amount:           curAmount,
 			Change:           curAmount - prevAmount,
-			PercentageChange: int(percentageChange(curAmount, prevAmount)),
+			PercentageChange: int(PercentageChange(curAmount, prevAmount)),
 			IsNew:            prevAmount == 0,
 		})
 	}
 
 	if len(prev) == 0 {
 		// No baseline: "biggest movers" is undefined, fall back to biggest spenders.
-		sortByAmountDesc(result, func(c CategorySpendingChange) int {
+		SortByAmountDesc(result, func(c CategorySpendingChange) int {
 			return c.Amount
 		})
 	} else {
-		sortByAmountDesc(result, func(c CategorySpendingChange) int {
+		SortByAmountDesc(result, func(c CategorySpendingChange) int {
 			if c.PercentageChange < 0 {
 				return -c.PercentageChange
 			}
@@ -235,22 +235,22 @@ type Number interface {
 		~float32 | ~float64
 }
 
-func percentageChange[T Number](current, previous T) float64 {
-	return roundTo2Dp(safeDivide(current-previous, previous) * 100)
+func PercentageChange[T Number](current, previous T) float64 {
+	return RoundTo2Dp(SafeDivide(current-previous, previous) * 100)
 }
 
-func roundTo2Dp(value float64) float64 {
+func RoundTo2Dp(value float64) float64 {
 	return math.Round(value*100) / 100
 }
 
-func safeDivide[T Number](a, b T) float64 {
+func SafeDivide[T Number](a, b T) float64 {
 	if b == 0 {
 		return 0
 	}
 	return float64(a) / float64(b)
 }
 
-func sortByAmountDesc[T any](s []T, amount func(T) int) {
+func SortByAmountDesc[T any](s []T, amount func(T) int) {
 	slices.SortFunc(s, func(a, b T) int {
 		if amount(b) > amount(a) {
 			return 1

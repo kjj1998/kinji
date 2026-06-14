@@ -1,12 +1,16 @@
-package model
+package domain
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/kjj1998/kinji/bff/internal/shared"
+)
 
 // StatementLine is a single extracted row from a bank statement: the transaction
 // together with the running account balance printed on that row (in cents). The
 // balance is used only to verify extraction integrity and is not persisted.
 type StatementLine struct {
-	Txn     Transaction
+	Txn     shared.Transaction
 	Balance int
 }
 
@@ -45,8 +49,8 @@ func (s Statement) Validate() error {
 
 // Transactions returns the statement's transactions in order, dropping the
 // balance bookkeeping.
-func (s Statement) Transactions() []Transaction {
-	txns := make([]Transaction, len(s.lines))
+func (s Statement) Transactions() []shared.Transaction {
+	txns := make([]shared.Transaction, len(s.lines))
 	for i, line := range s.lines {
 		txns[i] = line.Txn
 	}
