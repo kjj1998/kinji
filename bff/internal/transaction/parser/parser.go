@@ -18,9 +18,15 @@ import (
 	pdfmodel "github.com/pdfcpu/pdfcpu/pkg/pdfcpu/model"
 )
 
+// rowExtractor turns a prepared (decrypted/validated) PDF into the raw extracted
+// rows. It is the seam that isolates the LLM call from the parser's row-mapping,
+// so the mapping can be tested without calling Anthropic.
+type rowExtractor interface {
+	extract(ctx context.Context, pdf []byte) (recordTransactionsInput, error)
+}
+
 type parser struct {
-	client anthropic.Client
-	model  anthropic.Model
+	extractor rowExtractor
 }
 
 // compile-time check that parser satisfies the application port.
@@ -28,8 +34,10 @@ var _ service.StatementParser = (*parser)(nil)
 
 func NewParser(model string) service.StatementParser {
 	return &parser{
-		client: anthropic.NewClient(),  // reads ANTHROPIC_API_KEY from env
-		model:  anthropic.Model(model), // e.g. "claude-sonnet-4-6" from cfg
+		extractor: &anthropicExtractor{
+			client: anthropic.NewClient(),  // reads ANTHROPIC_API_KEY from env
+			model:  anthropic.Model(model), // e.g. "claude-sonnet-4-6" from cfg
+		},
 	}
 }
 
@@ -53,7 +61,7 @@ func (p *parser) Extract(
 		return nil, err
 	}
 
-	input, err := p.extract(ctx, pdf)
+	input, err := p.extractor.extract(ctx, pdf)
 	if err != nil {
 		return nil, err
 	}
@@ -109,8 +117,18 @@ func preparePDF(pdf []byte, password string) ([]byte, error) {
 	return out.Bytes(), nil
 }
 
+// anthropicExtractor is the production rowExtractor: it runs the Anthropic
+// tool-use call against the statement PDF.
+type anthropicExtractor struct {
+	client anthropic.Client
+	model  anthropic.Model
+}
+
+// compile-time check that anthropicExtractor satisfies the seam.
+var _ rowExtractor = (*anthropicExtractor)(nil)
+
 // extract runs the Anthropic tool-use call and returns the decoded tool input.
-func (p *parser) extract(ctx context.Context, pdf []byte) (recordTransactionsInput, error) {
+func (p *anthropicExtractor) extract(ctx context.Context, pdf []byte) (recordTransactionsInput, error) {
 	b64 := base64.StdEncoding.EncodeToString(pdf)
 	documentBlock := anthropic.NewDocumentBlock(anthropic.Base64PDFSourceParam{Data: b64})
 	textBlock := anthropic.NewTextBlock(extractionPrompt)

@@ -10,10 +10,10 @@ import (
 
 	platformhttp "github.com/kjj1998/kinji/bff/internal/platform/http"
 	"github.com/kjj1998/kinji/bff/internal/shared"
+	shareddto "github.com/kjj1998/kinji/bff/internal/shared/dto"
 	"github.com/kjj1998/kinji/bff/internal/transaction/domain"
 	"github.com/kjj1998/kinji/bff/internal/transaction/dto"
 	transactionsvc "github.com/kjj1998/kinji/bff/internal/transaction/service"
-	webdto "github.com/kjj1998/kinji/bff/internal/shared/webdto"
 )
 
 // TransactionHandler handles HTTP requests for transactions.
@@ -47,7 +47,7 @@ func (h *TransactionHandler) GetMonthlyTransactions(w http.ResponseWriter, r *ht
 		platformhttp.WriteError(w, http.StatusInternalServerError, "failed to get monthly transactions")
 		return
 	}
-	platformhttp.WriteJSON(w, http.StatusOK, webdto.ToTransactions(transactions))
+	platformhttp.WriteJSON(w, http.StatusOK, shareddto.ToTransactions(transactions))
 }
 
 // ImportStatement parses an uploaded PDF bank statement and
@@ -95,7 +95,7 @@ func (h *TransactionHandler) ImportStatement(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	data, err := json.Marshal(webdto.ToTransactions(transactions))
+	data, err := json.Marshal(shareddto.ToTransactions(transactions))
 	if err != nil {
 		sendError("failed to encode result")
 		return
@@ -129,7 +129,7 @@ func (h *TransactionHandler) SaveTransactions(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	var transactions []webdto.Transaction
+	var transactions []shareddto.Transaction
 
 	r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
 
@@ -140,14 +140,14 @@ func (h *TransactionHandler) SaveTransactions(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	saved, err := h.svc.SaveTransactions(r.Context(), userId, webdto.DomainTransactions(transactions))
+	saved, err := h.svc.SaveTransactions(r.Context(), userId, shareddto.DomainTransactions(transactions))
 	if err != nil {
 		slog.ErrorContext(r.Context(), "save transactions", "error", err)
 		platformhttp.WriteError(w, http.StatusInternalServerError, "failed to save transactions")
 		return
 	}
 
-	platformhttp.WriteJSON(w, http.StatusOK, webdto.ToTransactions(saved))
+	platformhttp.WriteJSON(w, http.StatusOK, shareddto.ToTransactions(saved))
 }
 
 // GetPeriods retrieves the years and months where transaction data is available

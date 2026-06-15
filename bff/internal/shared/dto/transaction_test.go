@@ -1,4 +1,4 @@
-package webdto
+package dto
 
 import (
 	"reflect"

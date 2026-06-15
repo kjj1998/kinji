@@ -1,4 +1,4 @@
-package webdto
+package dto
 
 import "github.com/kjj1998/kinji/bff/internal/shared"
 

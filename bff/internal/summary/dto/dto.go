@@ -2,7 +2,7 @@ package dto
 
 import (
 	"github.com/kjj1998/kinji/bff/internal/shared"
-	webdto "github.com/kjj1998/kinji/bff/internal/shared/webdto"
+	shareddto "github.com/kjj1998/kinji/bff/internal/shared/dto"
 	"github.com/kjj1998/kinji/bff/internal/summary/domain"
 )
 
@@ -53,7 +53,7 @@ type TransactionSummary struct {
 	DailyTrend         []DateSpending           `json:"dailyTrend"`
 	BiggestChanges     []CategorySpendingChange `json:"biggestChanges"`
 	TopMerchants       []Merchant               `json:"topMerchants"`
-	RecentTransactions []webdto.Transaction     `json:"recentTransactions"`
+	RecentTransactions []shareddto.Transaction  `json:"recentTransactions"`
 }
 
 // ToTransactionSummary maps the domain read-model to its wire representation,
@@ -75,7 +75,7 @@ func ToTransactionSummary(s *domain.MonthlySummary) *TransactionSummary {
 		DailyTrend:         toDailyTrend(s.DailyTrend),
 		BiggestChanges:     toCategorySpendingChanges(capSlice(s.BiggestChanges, maxBiggestChanges)),
 		TopMerchants:       toMerchants(s.TopMerchants),
-		RecentTransactions: webdto.ToTransactions(capSlice(s.RecentTransactions, maxRecentTransactions)),
+		RecentTransactions: shareddto.ToTransactions(capSlice(s.RecentTransactions, maxRecentTransactions)),
 	}
 }
 

@@ -1,11 +1,5 @@
 package store
 
-const getAllTransactionsWithinDateRange = `
-	SELECT id, user_id, date, merchant, category, amount, direction, notes, split
-	FROM transactions
-	WHERE user_id = ? AND date >= ? AND date <= ?
-	ORDER BY date DESC`
-
 const getTopSpendingMerchantsWithinDateRange = `
 	SELECT merchant, SUM(amount) AS total, category
 	FROM transactions
