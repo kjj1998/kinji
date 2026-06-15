@@ -1,0 +1,6 @@
+# Compiled binary (build output at module root)
+/api
+
+# Test coverage artifacts
+coverage.out
+coverage.html
