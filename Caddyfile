@@ -1,0 +1,12 @@
+localhost {
+  @api path /api/* /health
+  handle @api {
+    reverse_proxy bff:8080
+  }
+
+  handle {
+    root * /srv
+    file_server
+    try_files {path} /index.html
+  }
+}

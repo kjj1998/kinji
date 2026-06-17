@@ -1,0 +1,22 @@
+# compose.yaml
+services:
+  bff:
+    build: ./bff
+    environment:
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+    volumes:
+      - kinji-data:/data
+  
+  caddy:
+    image: caddy:2
+    ports: ["80:80", "443:443"]
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./frontend/dist:/srv:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  kinji-data:
+  caddy_data:
+  caddy_config:
