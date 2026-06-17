@@ -1,0 +1,7 @@
+/api
+coverage.*
+**/*_test.go
+docs/
+*.md
+.git/
+.vscode/
