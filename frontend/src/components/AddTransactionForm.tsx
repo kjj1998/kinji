@@ -10,14 +10,16 @@ import {
 import { DateInput } from "@mantine/dates";
 import { useForm } from "@mantine/form";
 
-import type { Transaction } from "../types";
+import type { Category, Transaction } from "../types";
 
 export interface AddTransactionFormProps {
+	userId: string;
 	categories: string[];
 	onAdd: (transaction: Transaction) => void;
 }
 
 export function AddTransactionForm({
+	userId,
 	categories,
 	onAdd,
 }: AddTransactionFormProps) {
@@ -47,13 +49,14 @@ export function AddTransactionForm({
 			<form
 				onSubmit={form.onSubmit((values) => {
 					const newTx: Transaction = {
-						id: Date.now(),
+						userId: userId,
 						date: values.date,
 						merchant: values.merchant,
-						category: values.category,
+						category: values.category as Category,
 						amount: values.amount,
 						notes: values.notes,
 						split: values.split ?? null,
+						direction: "OUTFLOW",
 					};
 					onAdd(newTx);
 					form.reset();

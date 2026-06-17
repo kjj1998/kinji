@@ -52,7 +52,7 @@ interface NavItem {
 export function Navbar({
 	current,
 	onNavigate,
-	onUpload,
+	// onUpload,
 	monthStatus,
 	statementsMissing,
 	user,

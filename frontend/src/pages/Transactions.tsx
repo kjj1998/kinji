@@ -56,9 +56,7 @@ export function Transactions() {
 
 	const years = useMemo(
 		() =>
-			[...periods]
-				.sort((a, b) => b.year - a.year)
-				.map((a) => String(a.year)),
+			[...periods].sort((a, b) => b.year - a.year).map((a) => String(a.year)),
 		[periods],
 	);
 
@@ -181,15 +179,14 @@ export function Transactions() {
 					}
 					const entry = periods.find((p) => String(p.year) === value);
 					setSelectedMonth(
-						entry
-							? String(Math.max(...entry.months)).padStart(2, "0")
-							: null,
+						entry ? String(Math.max(...entry.months)).padStart(2, "0") : null,
 					);
 				}}
 				onShowFormClick={() => setShowForm((prev) => !prev)}
 			/>
 			{showForm && (
 				<AddTransactionForm
+					userId={"james"}
 					categories={categories}
 					onAdd={() => {
 						queryClient.invalidateQueries({

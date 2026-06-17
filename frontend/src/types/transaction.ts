@@ -15,7 +15,7 @@ export type Category = (typeof CATEGORIES)[number];
 
 export interface Transaction {
 	userId: string;
-	id: string;
+	id?: string | null;
 	date: string;
 	merchant: string;
 	category: Category;

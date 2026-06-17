@@ -42,13 +42,19 @@ export function Overview({ userName }: OverviewProps) {
 	const now = new Date();
 	const month = String(now.getMonth() + 1).padStart(2, "0");
 	const year = String(now.getFullYear());
-	const { data: summary, isLoading } = useSummary("james", month, year);
+	const {
+		data: summary,
+		isLoading,
+		isError,
+	} = useSummary("gomez", month, year);
 
-	if (isLoading || !summary) {
+	if (isLoading) {
 		return <>Loading...</>;
 	}
 
-	console.log(summary);
+	if (isError || !summary) {
+		return <>No Data</>;
+	}
 
 	const formattedMonthlyTrendData = formatSpendingBarChartData(
 		summary.monthlyExpenses,

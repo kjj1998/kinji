@@ -10,9 +10,15 @@ export function MonthSummary({ monthlySummary }: MonthSummaryProps) {
 			<Title order={5} mb={6}>
 				Monthly Summary
 			</Title>
-			<Text size="sm" c="dimmed" lh={1.6}>
-				{monthlySummary}
-			</Text>
+			{monthlySummary === "" ? (
+				<Text size="sm" c="dimmed" ta="center" py="md">
+					No summary statement for this month
+				</Text>
+			) : (
+				<Text size="sm" c="dimmed" lh={1.6}>
+					{monthlySummary}
+				</Text>
+			)}
 		</Card>
 	);
 }

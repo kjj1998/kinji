@@ -29,7 +29,9 @@ export function SpendingByCategory({
 				Spending by Category
 			</Title>
 			{spendingByCategory.length === 0 ? (
-				<Text ta="center">No data found</Text>
+				<Text size="sm" c="dimmed" ta="center" py="md">
+					No data found
+				</Text>
 			) : (
 				<Stack gap="xs">
 					{data.map((cat) => (
