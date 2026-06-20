@@ -1,4 +1,8 @@
-localhost {
+{
+    email koh.jun.jie.167@gmail.com
+}
+
+{$SITE_ADDRESS:localhost} {
   @api path /api/* /health
   handle @api {
     reverse_proxy bff:8080
