@@ -21,6 +21,7 @@ const (
 	CategoryTransport     Category = "Transport"
 	CategoryUtilities     Category = "Utilities"
 	CategoryCredit        Category = "Credit"
+	CategoryTransfer      Category = "Transfer"
 )
 
 type Transaction struct {
@@ -49,7 +50,7 @@ func (c Category) IsValid() bool {
 	switch c {
 	case CategoryEntertainment, CategoryFood, CategoryGroceries,
 		CategoryHealth, CategoryIncome, CategoryShopping,
-		CategorySubscriptions, CategoryTransport, CategoryUtilities, CategoryCredit:
+		CategorySubscriptions, CategoryTransport, CategoryUtilities, CategoryCredit, CategoryTransfer:
 		return true
 	}
 	return false

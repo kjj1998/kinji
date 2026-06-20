@@ -9,6 +9,7 @@ export const CATEGORIES = [
 	"Transport",
 	"Utilities",
 	"Credit",
+	"Transfer",
 ] as const;
 
 export type Category = (typeof CATEGORIES)[number];

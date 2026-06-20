@@ -22,7 +22,7 @@ var RecordTransactionsInputSchema = anthropic.ToolInputSchemaParam{
 						"type": "string",
 						"enum": []string{
 							"Entertainment", "Food", "Groceries", "Health",
-							"Income", "Shopping", "Subscriptions", "Transport", "Utilities", "Credit",
+							"Income", "Shopping", "Subscriptions", "Transport", "Utilities", "Credit", "Transfer",
 						},
 					},
 					"amount": map[string]any{
@@ -70,11 +70,11 @@ For each transaction, provide:
 
 - date: ISO YYYY-MM-DD. When the description contains an embedded purchase date (e.g. "28/06/24"), use that — it is the actual transaction date. Otherwise use the row's posting date. If the statement abbreviates the year, infer the full year from the statement period shown elsewhere on the page.
 - merchant: the cleaned merchant name. Strip leading card-mask tokens like "xx-4070" or "xx-6790" and trailing single-letter country codes like "S" (Singapore). Preserve the company casing as it appears (e.g. "KOUFU PTE LTD", "APPLE.COM/SG"). If the company name has digits behind like "McDonalds 930144", truncate and take "McDonalds" only.
-- category: exactly one of "Credit", "Entertainment", "Food", "Groceries", "Health", "Income", "Shopping", "Subscriptions", "Transport", "Utilities". Pick the closest match using these cues — bank interest, rebate, cashback, credit → Credit, incoming salary → Income; ride-hailing, transit, EZ-Link, fuel → Transport; restaurants, cafes, food courts → Food; supermarkets and grocery stores → Groceries; clinics, pharmacies, fitness → Health; streaming services, SaaS, app subscriptions → Subscriptions; utility bills, telcos → Utilities; cinemas, games, events → Entertainment; everything else retail → Shopping.
+- category: exactly one of "Credit", "Transfer", "Entertainment", "Food", "Groceries", "Health", "Income", "Shopping", "Subscriptions", "Transport", "Utilities". Pick the closest match using these cues — bank interest, rebate, cashback, credit → Credit; FAST Payment, PayNow → Transfer,incoming salary → Income; ride-hailing, transit, EZ-Link, fuel → Transport; restaurants, cafes, food courts → Food; supermarkets and grocery stores → Groceries; clinics, pharmacies, fitness → Health; streaming services, SaaS, app subscriptions → Subscriptions; utility bills, telcos → Utilities; cinemas, games, events → Entertainment; everything else retail → Shopping.
 - amount: integer cents — always positive. "365.70" → 36570, "1,234.56" → 123456. The sign lives in direction, not in amount.
 - direction: "OUTFLOW" if the value sits in a Withdrawal / Debit column. "INFLOW" if it sits in a Deposit / Credit column.
 - balance: the running account balance printed on that row, in integer cents. This is verified by arithmetic, so it must match the statement exactly.
-- notes: optional. If the row has a transaction-type label such as "DEBIT PURCHASE", "FUND TRANSFER", or "GIRO", put it here. Empty string if none.
+- notes: optional. After you have extracted the merchant, put any remaining information from the transaction description that did not become part of the merchant name here — for example transaction-type labels such as "DEBIT PURCHASE", "FUND TRANSFER", or "GIRO", stripped card-mask tokens, reference numbers, or trailing digits like the "930144" from "McDonalds 930144". Keep the original wording, separated by spaces. Empty string if nothing is left over.
 
 Skip rows that are not actual transactions: opening balance ("BALANCE B/F"), closing balance, page subtotals, column headers, marketing or legal text, and footer notes.
 
