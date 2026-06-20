@@ -109,7 +109,11 @@ export function Upload({ userId }: UploadProps) {
 					{phase === "parsing" ? (
 						<ParsingStatement file={file} stage={stage} onCancel={clearFile} />
 					) : phase === "review" ? (
-						<ReviewStatement transactions={transactions} save={handleSave} />
+						<ReviewStatement
+							transactions={transactions}
+							save={handleSave}
+							cancel={clearFile}
+						/>
 					) : phase === "error" ? (
 						<div>Error</div>
 					) : file ? (

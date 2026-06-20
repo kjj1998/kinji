@@ -15,9 +15,14 @@ function currencyFormatter(params: ValueFormatterParams) {
 interface ReviewStatementProps {
 	transactions: Transaction[];
 	save: (rows: Transaction[]) => void;
+	cancel: () => void;
 }
 
-export function ReviewStatement({ transactions, save }: ReviewStatementProps) {
+export function ReviewStatement({
+	transactions,
+	save,
+	cancel,
+}: ReviewStatementProps) {
 	const colDefs = useMemo<ColDef<Transaction>[]>(
 		() => [
 			{
@@ -128,7 +133,9 @@ export function ReviewStatement({ transactions, save }: ReviewStatementProps) {
 					{transactions.length} transactions · ✓ reconciled
 				</Text>
 				<Group gap="sm">
-					<Button variant="default">Cancel</Button>
+					<Button variant="default" onClick={cancel}>
+						Cancel
+					</Button>
 					<Button color="dark" onClick={handleSave}>
 						Save
 					</Button>
