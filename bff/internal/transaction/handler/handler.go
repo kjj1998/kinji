@@ -108,11 +108,11 @@ func (h *TransactionHandler) ImportStatement(w http.ResponseWriter, r *http.Requ
 func importErrorMessage(err error) string {
 	switch {
 	case errors.Is(err, domain.ErrPDFPasswordRequired):
-		return "pdf password required"
+		return "Password is required for this statement."
 	case errors.Is(err, domain.ErrPDFWrongPassword):
-		return "wrong pdf password given"
+		return "Wrong password given for this statement."
 	case errors.Is(err, domain.ErrPDFCorrupt):
-		return "invalid/corrupt pdf file"
+		return "Invalid/Corrupt statement file provided"
 	}
 	var ce *shared.ClientError
 	if errors.As(err, &ce) {

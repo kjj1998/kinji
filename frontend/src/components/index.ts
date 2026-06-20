@@ -1,6 +1,7 @@
 export * from "./AddTransactionForm";
 export * from "./BiggestChanges";
 export * from "./ConfirmStatement";
+export * from "./ErrorStatement";
 export * from "./FileChip";
 export * from "./Header";
 export * from "./MonthSummary";

@@ -257,9 +257,9 @@ func TestImportErrorMessage(t *testing.T) {
 		err  error
 		want string
 	}{
-		{"password required", domain.ErrPDFPasswordRequired, "pdf password required"},
-		{"wrong password", domain.ErrPDFWrongPassword, "wrong pdf password given"},
-		{"corrupt", domain.ErrPDFCorrupt, "invalid/corrupt pdf file"},
+		{"password required", domain.ErrPDFPasswordRequired, "Password is required for this statement."},
+		{"wrong password", domain.ErrPDFWrongPassword, "Wrong password given for this statement."},
+		{"corrupt", domain.ErrPDFCorrupt, "Invalid/Corrupt statement file provided"},
 		{"client error", &shared.ClientError{Reason: "bad rows"}, "bad rows"},
 		{"generic", errors.New("nope"), "failed to import statement"},
 	}

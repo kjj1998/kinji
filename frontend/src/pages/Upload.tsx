@@ -3,6 +3,7 @@ import { notifications } from "@mantine/notifications";
 import { useRef, useState } from "react";
 import {
 	ConfirmStatement,
+	ErrorStatement,
 	Header,
 	ParsingStatement,
 	ReviewStatement,
@@ -27,7 +28,7 @@ export function Upload({ userId }: UploadProps) {
 	const [file, setFile] = useState<File | null>(null);
 	const [password, setPassword] = useState("");
 	const [transactions, setTransactions] = useState<Transaction[]>([]);
-	const [_errorMsg, setErrorMsg] = useState("");
+	const [errorMsg, setErrorMsg] = useState("");
 
 	const abortRef = useRef<AbortController | null>(null);
 
@@ -115,7 +116,7 @@ export function Upload({ userId }: UploadProps) {
 							cancel={clearFile}
 						/>
 					) : phase === "error" ? (
-						<div>Error</div>
+						<ErrorStatement message={errorMsg} onDismiss={clearFile} />
 					) : file ? (
 						<ConfirmStatement
 							file={file}
