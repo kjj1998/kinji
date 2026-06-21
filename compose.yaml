@@ -1,7 +1,7 @@
 # compose.yaml
 services:
   bff:
-    build: ghcr.io/kjj1998/kinji-bff:latest
+    image: ghcr.io/kjj1998/kinji-bff:latest
     environment:
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
     volumes:
