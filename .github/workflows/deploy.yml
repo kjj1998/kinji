@@ -1,0 +1,73 @@
+name: deploy
+on:
+    push:
+        branches: [main]
+
+env:
+    IMAGE: ghcr.io/kjj1998/kinji-bff
+
+jobs:
+    test:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+            - uses: actions/setup-go@v5
+              with: { go-version: "1.25" }
+            - run: go test ./...
+              working-directory: bff
+
+    build-push:
+        needs: test
+        runs-on: ubuntu-latest
+        permissions:
+            contents: read
+            packages: write
+        steps:
+            - uses: actions/checkout@v4
+            - uses: docker/login-action@v3
+              with:
+                  registry: gchr.io
+                  username: ${{ github.actor }}
+                  password: ${{ secrets.GITHUB_TOKEN }}
+            - uses: docker/build-push-action@v6
+              with:
+                  context: ./bff
+                  platforms: linux/amd64
+                  push: true
+                  tags: |
+                      ${{ env.IMAGE }}:latest
+                      ${{ env.IMAGE }}:${{ github.sha }}
+
+    deploy:
+        needs: build-push
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+            - uses: actions/setup-node@v4
+              with: { node-version: "22" }
+            - name: Build frontend
+              working-directory: frontend
+              run: npm ci && npm run build
+              env:
+                  VITE_API_URL: ""
+            - name: Ship frontend to droplet
+              uses: appleboy/scp-action@v0.1.7
+              with:
+                  host: ${{ secrets.SSH_HOST }}
+                  username: ${{ secrets.SSH_USER }}
+                  key: ${{ secrets.SSH_KEY }}
+                  source: "frontend/dist/*"
+                  target: "~/kinji/frontend/dist"
+                  strip_components: 2
+            - name: Pull image + restart on droplet
+              uses: appleboy/ssh-action@v1.0.3
+              with:
+                  host: ${{ secrets.SSH_HOST }}
+                  username: ${{ secrets.SSH_USER }}
+                  key: ${{ secrets.SSH_KEY }}
+                  script: |
+                      cd ~/kinji
+                      git pull
+                      docker compose pull bff
+                      docker compose up -d
+                      docker image prune -f
